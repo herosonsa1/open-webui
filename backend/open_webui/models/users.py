@@ -16,6 +16,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     Date,
+    Integer,
     String,
     Text,
     case,
@@ -822,3 +823,68 @@ class UsersTable:
 
 
 Users = UsersTable()  # singleton user repository
+
+
+class UserSyncLog(Base):
+    __tablename__ = 'user_sync_log'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sync_type = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    appended_count = Column(Integer, default=0, nullable=False)
+    updated_count = Column(Integer, default=0, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(BigInteger, nullable=False)
+
+
+class UserSyncLogModel(BaseModel):
+    id: int | None = None
+    sync_type: str
+    status: str
+    appended_count: int = 0
+    updated_count: int = 0
+    error_message: str | None = None
+    created_at: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class UserSyncLogsTable:
+    async def insert_new_log(
+        self,
+        sync_type: str,
+        status: str,
+        appended_count: int = 0,
+        updated_count: int = 0,
+        error_message: str | None = None,
+        db: AsyncSession | None = None,
+    ) -> UserSyncLogModel | None:
+        async with get_async_db_context(db) as session:
+            log_entry = UserSyncLog(
+                sync_type=sync_type,
+                status=status,
+                appended_count=appended_count,
+                updated_count=updated_count,
+                error_message=error_message,
+                created_at=int(time.time())
+            )
+            session.add(log_entry)
+            await session.commit()
+            await session.refresh(log_entry)
+            return UserSyncLogModel.model_validate(log_entry) if log_entry else None
+
+    async def get_sync_logs(
+        self,
+        limit: int = 50,
+        db: AsyncSession | None = None,
+    ) -> list[UserSyncLogModel]:
+        async with get_async_db_context(db) as session:
+            stmt = select(UserSyncLog).order_by(UserSyncLog.created_at.desc()).limit(limit)
+            result = await session.execute(stmt)
+            logs = result.scalars().all()
+            return [UserSyncLogModel.model_validate(log_entry) for log_entry in logs]
+
+
+UserSyncLogs = UserSyncLogsTable()

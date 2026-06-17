@@ -830,13 +830,30 @@ async def force_sync_users(
 ):
     from open_webui.utils.user_sync import sync_users_from_prod_db
     try:
-        appended, updated = await sync_users_from_prod_db(db)
+        appended, updated = await sync_users_from_prod_db(sync_type='MANUAL', db=db)
         return {"status": "success", "appended": appended, "updated": updated}
     except Exception as e:
         log.exception("Manual user sync failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"사용자 정보 동기화 중 오류 발생: {str(e)}"
+        )
+
+
+@router.get('/sync/history')
+async def get_user_sync_history(
+    user=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    from open_webui.models.users import UserSyncLogs
+    try:
+        logs = await UserSyncLogs.get_sync_logs(limit=50, db=db)
+        return logs
+    except Exception as e:
+        log.exception("Failed to fetch user sync history")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"동기화 이력 조회 중 오류 발생: {str(e)}"
         )
 
 

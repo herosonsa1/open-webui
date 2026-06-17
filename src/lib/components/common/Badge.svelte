@@ -1,6 +1,7 @@
 <script lang="ts">
 	export let type = 'info';
 	export let content = '';
+	export let className = '';
 
 	const classNames: Record<string, string> = {
 		info: 'bg-blue-500/20 text-blue-700 dark:text-blue-200 ',
@@ -12,8 +13,8 @@
 </script>
 
 <div
-	class=" text-xs font-medium {classNames[type] ??
-		classNames['info']} w-fit px-[5px] rounded-lg uppercase line-clamp-1 mr-0.5"
+	class=" {className.includes('text-') ? '' : 'text-xs'} font-medium {classNames[type] ??
+		classNames['info']} w-fit px-[5px] rounded-lg uppercase line-clamp-1 mr-0.5 {className}"
 >
 	{content}
 </div>

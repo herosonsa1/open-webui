@@ -21,6 +21,7 @@
 	import EditUserModal from '$lib/components/admin/Users/UserList/EditUserModal.svelte';
 	import UserChatsModal from '$lib/components/admin/Users/UserList/UserChatsModal.svelte';
 	import AddUserModal from '$lib/components/admin/Users/UserList/AddUserModal.svelte';
+	import UserSyncHistoryModal from '$lib/components/admin/Users/UserList/UserSyncHistoryModal.svelte';
 
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import RoleUpdateConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
@@ -56,6 +57,7 @@
 	let showUserChatsModal = false;
 	let showEditUserModal = false;
 	let showUserPreviewModal = false;
+	let showUserSyncHistoryModal = false;
 
 	let isSyncing = false;
 	$: isAdmin = $user?.role === 'admin';
@@ -176,6 +178,8 @@
 	}}
 />
 
+<UserSyncHistoryModal bind:show={showUserSyncHistoryModal} />
+
 {#if selectedUser}
 	<UserChatsModal bind:show={showUserChatsModal} user={selectedUser} />
 {/if}
@@ -269,6 +273,20 @@
 						</button>
 					</Tooltip>
 				</div>
+				<div class="mr-1">
+					<Tooltip content="동기화 이력">
+						<button
+							class="p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
+							on:click={() => {
+								showUserSyncHistoryModal = true;
+							}}
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+							</svg>
+						</button>
+					</Tooltip>
+				</div>
 				{/if}
 
 				<div>
@@ -289,11 +307,11 @@
 
 	<div class="scrollbar-hidden relative whitespace-nowrap overflow-x-auto max-w-full">
 		<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full">
-			<thead class="text-xs text-gray-800 uppercase bg-transparent dark:text-gray-200">
+			<thead class="text-[9px] text-gray-800 uppercase bg-transparent dark:text-gray-200">
 				<tr class=" border-b-[1.5px] border-gray-50 dark:border-gray-850/30">
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 						on:click={() => setSortKey('role')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -316,7 +334,7 @@
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 						on:click={() => setSortKey('name')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -339,49 +357,49 @@
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						직급
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						부서명
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						연락처
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						고정 IP주소
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						입사일
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						비밀번호 변경일
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 					>
 						동기화 잠금
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 						on:click={() => setSortKey('email')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -405,7 +423,7 @@
 
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 						on:click={() => setSortKey('last_active_at')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -429,7 +447,7 @@
 					</th>
 					<th
 						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
+						class="px-1 py-1 cursor-pointer select-none"
 						on:click={() => setSortKey('created_at')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -450,13 +468,13 @@
 						</div>
 					</th>
 
-					<th scope="col" class="px-2.5 py-2 text-right" />
+					<th scope="col" class="px-1 py-1 text-right" />
 				</tr>
 			</thead>
 			<tbody class="">
 				{#each users as user, userIdx (user.id)}
-					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
-						<td class="px-3 py-1 min-w-[7rem] w-28">
+					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-[9px]">
+						<td class="px-1 py-0.5 min-w-[5.5rem] w-24">
 							<button
 								class=" translate-y-0.5"
 								aria-label={$i18n.t('Change User Role')}
@@ -468,14 +486,15 @@
 								<Badge
 									type={user.role === 'admin' ? 'info' : user.role === 'user' ? 'success' : 'muted'}
 									content={$i18n.t(user.role)}
+									className="text-[9px]"
 								/>
 							</button>
 						</td>
-						<td class="px-3 py-1 font-medium text-gray-900 dark:text-white max-w-48">
-							<div class="flex items-center gap-2">
+						<td class="px-1 py-0.5 font-medium text-gray-900 dark:text-white max-w-36">
+							<div class="flex items-center gap-1.5">
 								<ProfilePreview {user} side="right" align="center" sideOffset={6}>
 									<img
-										class="rounded-full w-6 min-w-6 h-6 object-cover mr-0.5 flex-shrink-0"
+										class="rounded-full w-5 min-w-5 h-5 object-cover mr-0.5 flex-shrink-0"
 										src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
 										alt="user"
 										on:error={(e) => {
@@ -498,46 +517,46 @@
 								{/if}
 							</div>
 						</td>
-						<td class=" px-3 py-1 truncate"> {user.position_name || '-'} </td>
-						<td class=" px-3 py-1 truncate"> {user.org_nm || '-'} </td>
-						<td class=" px-3 py-1 truncate"> {user.phone_number || '-'} </td>
-						<td class=" px-3 py-1 truncate"> {user.ip_address || '-'} </td>
-						<td class=" px-3 py-1 truncate"> {user.join_date || '-'} </td>
-						<td class=" px-3 py-1 truncate">
+						<td class=" px-1 py-0.5 truncate"> {user.position_name || '-'} </td>
+						<td class=" px-1 py-0.5 truncate"> {user.org_nm || '-'} </td>
+						<td class=" px-1 py-0.5 truncate"> {user.phone_number || '-'} </td>
+						<td class=" px-1 py-0.5 truncate"> {user.ip_address || '-'} </td>
+						<td class=" px-1 py-0.5 truncate"> {user.join_date || '-'} </td>
+						<td class=" px-1 py-0.5 truncate">
 							{user.password_updated_at && user.password_updated_at > 0 ? dayjs(user.password_updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '초기화 필요'}
 						</td>
-						<td class=" px-3 py-1 text-center">
+						<td class=" px-1 py-0.5 text-center">
 							<input
 								type="checkbox"
 								checked={user.sync_lock_yn === 'Y'}
 								on:change={() => toggleSyncLock(user)}
-								class="rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500 size-3.5"
+								class="rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500 size-3"
 								disabled={!isAdmin}
 							/>
 						</td>
-						<td class=" px-3 py-1 max-w-48 truncate"> {user.email} </td>
+						<td class=" px-1 py-0.5 max-w-36 truncate"> {user.email} </td>
 
-						<td class=" px-3 py-1">
+						<td class=" px-1 py-0.5">
 							{dayjs(user.last_active_at * 1000).fromNow()}
 						</td>
 
-						<td class=" px-3 py-1">
+						<td class=" px-1 py-0.5">
 							{dayjs(user.created_at * 1000).format('LL')}
 						</td>
 
-						<td class="px-3 py-1 text-right">
+						<td class="px-1 py-0.5 text-right">
 							<div class="flex justify-end w-full">
 								{#if $config.features.enable_admin_chat_access && user.role !== 'admin'}
 									<Tooltip content={$i18n.t('Chats')}>
 										<button
-											class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+											class="self-center w-fit text-xs px-1 py-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											aria-label={$i18n.t('Chats')}
 											on:click={async () => {
 												showUserChatsModal = !showUserChatsModal;
 												selectedUser = user;
 											}}
 										>
-											<ChatBubbles />
+											<ChatBubbles className="w-3.5 h-3.5" />
 										</button>
 									</Tooltip>
 								{/if}
@@ -545,7 +564,7 @@
 								{#if user.role !== 'admin'}
 									<Tooltip content={$i18n.t('Preview Access')}>
 										<button
-											class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+											class="self-center w-fit text-xs px-1 py-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											aria-label={$i18n.t('Preview Access')}
 											on:click={() => {
 												selectedUser = user;
@@ -558,7 +577,7 @@
 												viewBox="0 0 24 24"
 												stroke-width="1.5"
 												stroke="currentColor"
-												class="w-4 h-4"
+												class="w-3.5 h-3.5"
 											>
 												<path
 													stroke-linecap="round"
@@ -577,7 +596,7 @@
 
 								<Tooltip content={$i18n.t('Edit User')}>
 									<button
-										class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+										class="self-center w-fit text-xs px-1 py-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 										aria-label={$i18n.t('Edit User')}
 										on:click={async () => {
 											showEditUserModal = !showEditUserModal;
@@ -590,7 +609,7 @@
 											viewBox="0 0 24 24"
 											stroke-width="1.5"
 											stroke="currentColor"
-											class="w-4 h-4"
+											class="w-3.5 h-3.5"
 										>
 											<path
 												stroke-linecap="round"
@@ -604,7 +623,7 @@
 								{#if user.role !== 'admin'}
 									<Tooltip content={$i18n.t('Delete User')}>
 										<button
-											class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+											class="self-center w-fit text-xs px-1 py-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											aria-label={$i18n.t('Delete User')}
 											on:click={async () => {
 												showDeleteConfirmDialog = true;
@@ -617,7 +636,7 @@
 												viewBox="0 0 24 24"
 												stroke-width="1.5"
 												stroke="currentColor"
-												class="w-4 h-4"
+												class="w-3.5 h-3.5"
 											>
 												<path
 													stroke-linecap="round"
