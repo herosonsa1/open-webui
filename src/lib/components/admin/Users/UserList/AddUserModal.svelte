@@ -213,15 +213,15 @@
 							<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2.5 w-full" />
 
 							<div class="flex flex-col w-full">
-								<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Email')}</div>
+								<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Employee ID')}</div>
 
 								<div class="flex-1">
 									<input
 										class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
-										type="email"
+										type="text"
 										bind:value={_user.email}
-										aria-label={$i18n.t('Email')}
-										placeholder={$i18n.t('Enter Your Email')}
+										aria-label={$i18n.t('Employee ID')}
+										placeholder={$i18n.t('Enter Your Employee ID')}
 										required
 									/>
 								</div>

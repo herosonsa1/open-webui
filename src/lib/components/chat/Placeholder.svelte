@@ -107,113 +107,92 @@
 					}}
 				/>
 			{:else}
-				<div class="flex flex-row justify-center gap-2.5 @sm:gap-3 w-fit px-5 max-w-xl">
-					<div class="flex shrink-0 justify-center">
-						<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
-							{#each models as model, modelIdx}
-								<Tooltip
-									content={(models[modelIdx]?.info?.meta?.tags ?? [])
-										.map((tag) => tag.name.toUpperCase())
-										.join(', ')}
-									placement="top"
-								>
-									<button
-										aria-hidden={models.length <= 1}
-										aria-label={$i18n.t('Get information on {{name}} in the UI', {
-											name: models[modelIdx]?.name
-										})}
-										on:click={() => {
-											selectedModelIdx = modelIdx;
-										}}
+				<!-- 관리자일 때만 상단 모델 아바타 및 모델 선택 드롭다운 노출 -->
+				{#if $user?.role === 'admin'}
+					<div class="flex flex-row justify-center gap-2.5 @sm:gap-3 w-fit px-5 max-w-xl mb-4">
+						<div class="flex shrink-0 justify-center">
+							<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
+								{#each models as model, modelIdx}
+									<Tooltip
+										content={(models[modelIdx]?.info?.meta?.tags ?? []).map((tag) => tag.name.toUpperCase()).join(', ')}
+										placement="top"
 									>
-										<img
-											src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											aria-hidden="true"
-											draggable="false"
-											on:error={(e) => {
-												e.currentTarget.src = '/favicon.png';
+										<button
+											aria-hidden={models.length <= 1}
+											aria-label={$i18n.t('Get information on {{name}} in the UI', {
+												name: models[modelIdx]?.name
+											})}
+											on:click={() => {
+												selectedModelIdx = modelIdx;
 											}}
-										/>
-									</button>
+										>
+											<img
+												src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
+												class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+												aria-hidden="true"
+												draggable="false"
+												on:error={(e) => {
+													e.currentTarget.src = '/favicon.png';
+												}}
+											/>
+										</button>
+									</Tooltip>
+								{/each}
+							</div>
+						</div>
+
+						<div
+							class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
+							in:fade={{ duration: 100 }}
+						>
+							{#if models[selectedModelIdx]?.name}
+								<Tooltip
+									content={models[selectedModelIdx]?.name}
+									placement="top"
+									className=" flex items-center "
+								>
+									<span class="line-clamp-1 font-semibold">
+										{models[selectedModelIdx]?.name}
+									</span>
 								</Tooltip>
-							{/each}
+							{/if}
 						</div>
 					</div>
+				{/if}
 
-					<div
-						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
-						in:fade={{ duration: 100 }}
-					>
-						{#if models[selectedModelIdx]?.name}
-							<Tooltip
-								content={models[selectedModelIdx]?.name}
-								placement="top"
-								className=" flex items-center "
-							>
-								<span class="line-clamp-1">
-									{models[selectedModelIdx]?.name}
-								</span>
-							</Tooltip>
-						{:else}
-							{$i18n.t('Hello, {{name}}', { name: $user?.name })}
-						{/if}
-					</div>
+				<!-- 개인화 웰컴 메시지: 이름 + 직책님 | 소속부서명 -->
+				{@const name = $user?.name ?? ''}
+				{@const position = $user?.position_name ?? ''}
+				{@const org = $user?.org_nm ?? ''}
+				<div class="text-3xl @sm:text-4xl font-bold text-gray-800 dark:text-gray-100 font-primary my-2" in:fade={{ duration: 100 }}>
+					안녕하세요, {name}<span class="text-xl @sm:text-2xl font-medium text-gray-500 dark:text-gray-400">{position ? ' ' + position : ''}님{org ? ' | ' + org : ''}</span>
 				</div>
 
-				<div class="flex mt-1 mb-2">
-					<div in:fade={{ duration: 100, delay: 50 }}>
-						{#if models[selectedModelIdx]?.info?.meta?.description ?? null}
-							<Tooltip
-								className=" w-fit"
-								content={DOMPurify.sanitize(
-									marked.parse(
-										sanitizeResponseContent(
-											models[selectedModelIdx]?.info?.meta?.description ?? ''
-										).replaceAll('\n', '<br>')
-									)
-								)}
-								placement="top"
-							>
-								<div
-									class="mt-0.5 px-2 text-sm font-normal text-gray-500 dark:text-gray-400 line-clamp-2 max-w-xl markdown"
-								>
-									{@html DOMPurify.sanitize(
-										marked.parse(
-											sanitizeResponseContent(
-												models[selectedModelIdx]?.info?.meta?.description ?? ''
-											).replaceAll('\n', '<br>')
-										)
-									)}
-								</div>
-							</Tooltip>
-
-							{#if models[selectedModelIdx]?.info?.meta?.user}
-								<div class="mt-0.5 text-sm font-normal text-gray-400 dark:text-gray-500">
-									By
-									{#if models[selectedModelIdx]?.info?.meta?.user.community}
-										<a
-											href="https://openwebui.com/m/{models[selectedModelIdx]?.info?.meta?.user
-												.username}"
-											>{models[selectedModelIdx]?.info?.meta?.user.name
-												? models[selectedModelIdx]?.info?.meta?.user.name
-												: `@${models[selectedModelIdx]?.info?.meta?.user.username}`}</a
-										>
-									{:else}
-										{models[selectedModelIdx]?.info?.meta?.user.name}
-									{/if}
-								</div>
-							{/if}
-						{/if}
+				<!-- 선택된 모델의 상세 정보 카드 (hello 메시지 하단에 표시) -->
+				{#if models[selectedModelIdx]?.info?.meta?.description}
+					<div in:fade={{ duration: 150 }} class="mt-4 mx-auto max-w-2xl text-left bg-gray-50 dark:bg-gray-850 border border-gray-100 dark:border-gray-800 p-5 rounded-2xl shadow-xs w-full">
+						<div class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+							<span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+							{models[selectedModelIdx]?.name} 모델 설명
+						</div>
+						<div class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed markdown">
+							{@html DOMPurify.sanitize(
+								marked.parse(
+									sanitizeResponseContent(
+										models[selectedModelIdx]?.info?.meta?.description ?? ''
+									).replaceAll('\n', '<br>')
+								)
+							)}
+						</div>
 					</div>
-				</div>
+				{/if}
 			{/if}
 
 			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
 				<MessageInput
 					bind:this={messageInput}
 					{history}
-					{selectedModels}
+					bind:selectedModels={selectedModels}
 					bind:files
 					bind:prompt
 					bind:autoScroll

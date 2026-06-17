@@ -144,6 +144,7 @@ from open_webui.config import (
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
     DEFAULT_PROMPT_SUGGESTIONS,
+    BUTTON_GROUPS,
     DEFAULT_RAG_TEMPLATE,
     DEFAULT_USER_ROLE,
     DOCLING_API_KEY,
@@ -674,8 +675,10 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(periodic_session_pool_cleanup())
 
     from open_webui.utils.automations import scheduler_worker_loop
+    from open_webui.utils.user_sync import user_sync_scheduler_loop
 
     asyncio.create_task(scheduler_worker_loop(app))
+    asyncio.create_task(user_sync_scheduler_loop(app))
 
     if app.state.config.ENABLE_BASE_MODELS_CACHE:
         try:
@@ -886,6 +889,7 @@ app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
 app.state.config.MODEL_ORDER_LIST = MODEL_ORDER_LIST
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
+app.state.config.BUTTON_GROUPS = BUTTON_GROUPS
 
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
@@ -2463,6 +2467,7 @@ async def get_app_config(request: Request):
                 'default_models': app.state.config.DEFAULT_MODELS,
                 'default_pinned_models': app.state.config.DEFAULT_PINNED_MODELS,
                 'default_prompt_suggestions': app.state.config.DEFAULT_PROMPT_SUGGESTIONS,
+                'button_groups': app.state.config.BUTTON_GROUPS,
                 **({'user_count': user_count} if user_count is not None else {}),
                 'code': {
                     'engine': app.state.config.CODE_EXECUTION_ENGINE,

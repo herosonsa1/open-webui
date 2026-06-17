@@ -672,3 +672,41 @@ async def get_banners(
     user=Depends(get_verified_user),
 ):
     return request.app.state.config.BANNERS
+
+
+############################
+# ButtonGroups
+############################
+
+class ButtonGroupModel(BaseModel):
+    id: str
+    name: str
+    knowledgeIds: list[str]
+    systemPrompt: str | None = None
+    skillIds: list[str] | None = None
+    toolIds: list[str] | None = None
+
+
+class SetButtonGroupsForm(BaseModel):
+    button_groups: list[ButtonGroupModel]
+
+
+@router.get('/button_groups', response_model=list[ButtonGroupModel])
+async def get_button_groups(
+    request: Request,
+    user=Depends(get_verified_user),
+):
+    # 전역 버튼 그룹 설정 조회 API (일반 사용자도 사용 가능)
+    return request.app.state.config.BUTTON_GROUPS
+
+
+@router.post('/button_groups', response_model=list[ButtonGroupModel])
+async def set_button_groups(
+    request: Request,
+    form_data: SetButtonGroupsForm,
+    user=Depends(get_admin_user),
+):
+    # 전역 버튼 그룹 설정 수정 API (관리자 전용)
+    data = form_data.model_dump()
+    request.app.state.config.BUTTON_GROUPS = data['button_groups']
+    return request.app.state.config.BUTTON_GROUPS

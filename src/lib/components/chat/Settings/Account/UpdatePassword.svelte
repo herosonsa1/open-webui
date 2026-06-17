@@ -12,6 +12,17 @@
 	let newPasswordConfirm = '';
 
 	const updatePasswordHandler = async () => {
+		// 대문자, 소문자, 숫자, 특수문자 1개 이상 포함, 8자 이상 검증
+		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+		if (!passwordRegex.test(newPassword)) {
+			toast.error(
+				'비밀번호는 대문자, 소문자, 숫자, 특수문자를 각각 1개 이상 포함하여 8자 이상이어야 합니다.'
+			);
+			newPassword = '';
+			newPasswordConfirm = '';
+			return;
+		}
+
 		if (newPassword === newPasswordConfirm) {
 			const res = await updateUserPassword(localStorage.token, currentPassword, newPassword).catch(
 				(error) => {
@@ -83,6 +94,9 @@
 						autocomplete="new-password"
 						required
 					/>
+				</div>
+				<div class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+					규칙: 대문자, 소문자, 숫자, 특수문자 각 1개 이상 포함, 8자 이상
 				</div>
 			</div>
 

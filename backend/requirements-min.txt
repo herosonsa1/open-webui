@@ -28,7 +28,7 @@ starsessions[redis]==2.2.1
 
 sqlalchemy==2.0.48
 aiosqlite==0.21.0
-psycopg[binary]==3.2.9
+psycopg[binary]==3.2.13
 alembic==1.18.4
 peewee==3.19.0
 peewee-migrate==1.14.3
@@ -57,3 +57,18 @@ black==26.3.1
 pydub
 chardet==5.2.0
 beautifulsoup4
+Markdown==3.10.2
+python-mimeparse
+pytz
+audioop-lts
+ldap3
+validators
+boto3
+tiktoken
+duckduckgo-search
+ddgs
+azure-core
+azure-storage-blob
+azure-identity
+google-cloud-storage
+fpdf2

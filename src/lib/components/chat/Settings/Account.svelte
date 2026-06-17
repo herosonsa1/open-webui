@@ -32,6 +32,15 @@
 	let gender = '';
 	let dateOfBirth = '';
 
+	let positionName = '';
+	let orgNm = '';
+	let orgCd = '';
+	let parentOrgNm = '';
+	let phoneNumber = '';
+	let ipAddress = '';
+	let joinDate = '';
+	let resignDate = '';
+
 	let webhookUrl = '';
 	let showAPIKeys = false;
 
@@ -62,7 +71,15 @@
 			profile_image_url: profileImageUrl,
 			bio: bio ? bio : null,
 			gender: gender ? gender : null,
-			date_of_birth: dateOfBirth ? dateOfBirth : null
+			date_of_birth: dateOfBirth ? dateOfBirth : null,
+			position_name: positionName ? positionName : null,
+			org_nm: orgNm ? orgNm : null,
+			org_cd: orgCd ? orgCd : null,
+			parent_org_nm: parentOrgNm ? parentOrgNm : null,
+			phone_number: phoneNumber ? phoneNumber : null,
+			ip_address: ipAddress ? ipAddress : null,
+			join_date: joinDate ? joinDate : null,
+			resign_date: resignDate ? resignDate : null
 		}).catch((error) => {
 			toast.error(`${error}`);
 		});
@@ -104,6 +121,15 @@
 			gender = _gender;
 
 			dateOfBirth = user?.date_of_birth ?? '';
+
+			positionName = user?.position_name ?? '';
+			orgNm = user?.org_nm ?? '';
+			orgCd = user?.org_cd ?? '';
+			parentOrgNm = user?.parent_org_nm ?? '';
+			phoneNumber = user?.phone_number ?? '';
+			ipAddress = user?.ip_address ?? '';
+			joinDate = user?.join_date ?? '';
+			resignDate = user?.resign_date ?? '';
 		}
 
 		webhookUrl = $settings?.notifications?.webhook_url ?? '';
@@ -219,6 +245,110 @@
 									aria-label={$i18n.t('Birth Date')}
 									bind:value={dateOfBirth}
 									required
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">직급</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={positionName}
+									placeholder="직급 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">부서명</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={orgNm}
+									placeholder="부서명 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">부서 코드</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={orgCd}
+									placeholder="부서 코드 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">상위부서명</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={parentOrgNm}
+									placeholder="상위부서명 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">연락처</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={phoneNumber}
+									placeholder="연락처 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">고정 IP주소</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={ipAddress}
+									placeholder="고정 IP주소 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">입사일</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={joinDate}
+									placeholder="입사일 입력"
+								/>
+							</div>
+						</div>
+
+						<div class="flex flex-col w-full mt-2">
+							<div class=" mb-1 text-xs font-medium">퇴사일</div>
+
+							<div class="flex-1">
+								<input
+									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
+									type="text"
+									bind:value={resignDate}
+									placeholder="퇴사일 입력"
 								/>
 							</div>
 						</div>

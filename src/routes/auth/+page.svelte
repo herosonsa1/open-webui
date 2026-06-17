@@ -336,19 +336,19 @@
 										{:else}
 											<div class="mb-2">
 												<label for="email" class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Email')}</label
+													>{$i18n.t('Employee ID')}</label
 												>
 												<input
 													bind:value={email}
-													type="email"
+													type="text"
 													id="email"
 													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-													autocomplete="email"
+													autocomplete="username"
 													name="email"
-													placeholder={$i18n.t('Enter Your Email')}
+													placeholder={$i18n.t('Enter Your Employee ID')}
 													required
-												/>
-											</div>
+								/>
+							</div>
 										{/if}
 
 										<div>

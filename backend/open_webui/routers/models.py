@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import posixpath
+import re
 from typing import Optional
 from urllib.parse import unquote
 
@@ -20,7 +21,7 @@ from fastapi import (
 from fastapi.responses import RedirectResponse, StreamingResponse
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import ENABLE_PROFILE_IMAGE_URL_FORWARDING, PROFILE_IMAGE_ALLOWED_MIME_TYPES
+from open_webui.env import ENABLE_PROFILE_IMAGE_URL_FORWARDING, PROFILE_IMAGE_ALLOWED_MIME_TYPES, ENV, DOCKER
 from open_webui.internal.db import get_async_session
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.groups import Groups
@@ -44,6 +45,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def is_local_request(request: Request) -> bool:
+    host = request.headers.get("host", "")
+    if ":" in host:
+        host = host.split(":")[0]
+
+    client_host = request.client.host if request.client else ""
+
+    for ip in [host, client_host]:
+        if not ip:
+            continue
+        if ip in ("localhost", "127.0.0.1"):
+            return True
+        if ip.startswith("192.168.") or ip.startswith("10."):
+            return True
+        if re.match(r"^172\.(1[6-9]|2[0-9]|3[0-1])\.", ip):
+            return True
+    return False
 
 
 def _safe_static_redirect_path(url: str) -> str | None:
@@ -116,6 +136,7 @@ PAGE_ITEM_COUNT = 30
 
 @router.get('/list', response_model=ModelAccessListResponse)  # do NOT use "/" as path, conflicts with main.py
 async def get_models(
+    request: Request,
     query: str | None = None,
     view_option: str | None = None,
     tag: str | None = None,
@@ -152,7 +173,8 @@ async def get_models(
 
         filter['user_id'] = user.id
 
-    result = await Models.search_models(user.id, filter=filter, skip=skip, limit=limit, db=db)
+    is_local = is_local_request(request)
+    result = await Models.search_models(user.id, filter=filter, skip=skip, limit=limit, is_local=is_local, db=db)
 
     # Batch-fetch writable model IDs in a single query instead of N has_access calls
     model_ids = [model.id for model in result.items]
@@ -193,9 +215,70 @@ async def get_models(
 ###########################
 
 
+DUMMY_MODEL_OBJECTS = [
+    {
+        'id': 'gemma2:9b',
+        'user_id': 'system',
+        'base_model_id': None,
+        'name': 'Gemma 2 9B (Dummy)',
+        'params': {},
+        'meta': {
+            'description': 'Google의 가볍고 효율적인 9B 크기의 오픈 모델 Gemma 2 입니다. (로컬 테스트용 더미)'
+        },
+        'is_active': True,
+        'updated_at': 0,
+        'created_at': 0
+    },
+    {
+        'id': 'gemma2:27b',
+        'user_id': 'system',
+        'base_model_id': None,
+        'name': 'Gemma 2 27B (Dummy)',
+        'params': {},
+        'meta': {
+            'description': 'Google의 우수한 성능을 자랑하는 27B 크기의 오픈 모델 Gemma 2 입니다. (로컬 테스트용 더미)'
+        },
+        'is_active': True,
+        'updated_at': 0,
+        'created_at': 0
+    },
+    {
+        'id': 'gemma2:31b',
+        'user_id': 'system',
+        'base_model_id': None,
+        'name': 'Gemma 2 31B (Dummy)',
+        'params': {},
+        'meta': {
+            'description': 'vLLM 테스트를 위한 31B 크기의 더미 모델입니다. (로컬 테스트용 더미)'
+        },
+        'is_active': True,
+        'updated_at': 0,
+        'created_at': 0
+    }
+]
+
+
 @router.get('/base', response_model=list[ModelResponse])
 async def get_base_models(user=Depends(get_admin_user), db: AsyncSession = Depends(get_async_session)):
-    return await Models.get_base_models(db=db)
+    base_models = await Models.get_base_models(db=db)
+    if ENV != 'prod' and not DOCKER:
+        from open_webui.models.models import ModelMeta, ModelParams
+        dummy_responses = [
+            ModelResponse(
+                id=d['id'],
+                user_id=d['user_id'],
+                base_model_id=d['base_model_id'],
+                name=d['name'],
+                params=ModelParams(**d['params']),
+                meta=ModelMeta(**d['meta']),
+                is_active=d['is_active'],
+                updated_at=d['updated_at'],
+                created_at=d['created_at']
+            )
+            for d in DUMMY_MODEL_OBJECTS
+        ]
+        base_models = base_models + dummy_responses
+    return base_models
 
 
 ###########################
@@ -294,10 +377,11 @@ async def export_models(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
+    is_local = is_local_request(request)
     if user.role == 'admin' and BYPASS_ADMIN_ACCESS_CONTROL:
-        return await Models.get_models(db=db)
+        return await Models.get_models(is_local=is_local, db=db)
     else:
-        return await Models.get_models_by_user_id(user.id, db=db)
+        return await Models.get_models_by_user_id(user.id, is_local=is_local, db=db)
 
 
 ############################

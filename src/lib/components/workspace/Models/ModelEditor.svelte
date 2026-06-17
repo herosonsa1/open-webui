@@ -53,6 +53,14 @@
 
 	let loaded = false;
 
+	const isLocalTest =
+		typeof window !== 'undefined' &&
+		(window.location.hostname === 'localhost' ||
+			window.location.hostname === '127.0.0.1' ||
+			window.location.hostname.startsWith('192.168.') ||
+			window.location.hostname.startsWith('10.') ||
+			/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname));
+
 	// ///////////
 	// model
 	// ///////////
@@ -612,7 +620,7 @@
 											class="text-sm w-full bg-transparent outline-hidden"
 											placeholder={$i18n.t('Select a base model (e.g. llama3, gpt-4o)')}
 											bind:value={info.base_model_id}
-											required
+											required={!isLocalTest}
 										>
 											<option value={null} class=" text-gray-900"
 												>{$i18n.t('Select a base model')}</option

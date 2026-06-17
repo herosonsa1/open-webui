@@ -6,7 +6,7 @@
 
 	import { goto } from '$app/navigation';
 
-	import { updateUserById, getUserGroupsById } from '$lib/apis/users';
+	import { updateUserById, getUserGroupsById, resetUserPasswordById } from '$lib/apis/users';
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -28,8 +28,10 @@
 
 	const init = () => {
 		if (selectedUser) {
-			_user = selectedUser;
-			_user.password = '';
+			_user = {
+				...selectedUser,
+				password: ''
+			};
 			loadUserGroups();
 		}
 	};
@@ -39,7 +41,17 @@
 		role: 'pending',
 		name: '',
 		email: '',
-		password: ''
+		password: '',
+		position_name: '',
+		org_nm: '',
+		org_cd: '',
+		parent_org_nm: '',
+		phone_number: '',
+		ip_address: '',
+		join_date: '',
+		resign_date: '',
+		sync_lock_yn: 'N',
+		password_updated_at: null
 	};
 
 	let userGroups: any[] | null = null;
@@ -63,6 +75,22 @@
 			toast.error(`${error}`);
 			return null;
 		});
+	};
+
+	const resetPasswordHandler = async () => {
+		const confirmReset = confirm('정말 이 사용자의 비밀번호를 사번으로 초기화하시겠습니까?\n초기화 후 첫 로그인 시 비밀번호 변경이 강제됩니다.');
+		if (!confirmReset) return;
+
+		const res = await resetUserPasswordById(localStorage.token, selectedUser.id).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		if (res) {
+			toast.success('비밀번호가 사번으로 성공적으로 초기화되었습니다.');
+			dispatch('save');
+			show = false;
+		}
 	};
 </script>
 
@@ -169,15 +197,15 @@
 									</div>
 
 									<div class="flex flex-col w-full">
-										<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Email')}</div>
+										<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Employee ID')}</div>
 
 										<div class="flex-1">
 											<input
 												class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
-												type="email"
+												type="text"
 												bind:value={_user.email}
-												aria-label={$i18n.t('Email')}
-												placeholder={$i18n.t('Enter Your Email')}
+												aria-label={$i18n.t('Employee ID')}
+												placeholder={$i18n.t('Enter Your Employee ID')}
 												autocomplete="off"
 												required
 											/>
@@ -200,6 +228,132 @@
 									{/if}
 
 									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">직급</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.position_name}
+												placeholder="직급 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">부서명</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.org_nm}
+												placeholder="부서명 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">부서 코드</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.org_cd}
+												placeholder="부서 코드 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">상위부서명</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.parent_org_nm}
+												placeholder="상위부서명 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">연락처</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.phone_number}
+												placeholder="연락처 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">고정 IP주소</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.ip_address}
+												placeholder="고정 IP주소 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">입사일</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.join_date}
+												placeholder="입사일 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">퇴사일</div>
+										<div class="flex-1">
+											<input
+												class="w-full text-sm bg-transparent outline-hidden"
+												type="text"
+												bind:value={_user.resign_date}
+												placeholder="퇴사일 입력"
+												autocomplete="off"
+											/>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">비밀번호 변경일</div>
+										<div class="flex-1 text-sm text-gray-500 dark:text-gray-400">
+											{_user.password_updated_at && _user.password_updated_at > 0 
+												? dayjs(_user.password_updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') 
+												: '초기화 필요'}
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
+										<div class=" mb-1 text-xs text-gray-500">동기화 잠금</div>
+										<div class="flex-1">
+											<select
+												class="w-full text-sm bg-transparent outline-hidden"
+												bind:value={_user.sync_lock_yn}
+											>
+												<option value="N">미잠금 (배치 동기화 허용)</option>
+												<option value="Y">잠금 (배치 동기화 제외)</option>
+											</select>
+										</div>
+									</div>
+
+									<div class="flex flex-col w-full">
 										<div class=" mb-1 text-xs text-gray-500">{$i18n.t('New Password')}</div>
 
 										<div class="flex-1">
@@ -218,7 +372,14 @@
 							</div>
 						</div>
 
-						<div class="flex justify-end pt-3 text-sm font-medium">
+						<div class="flex justify-end pt-3 text-sm font-medium space-x-2">
+							<button
+								class="px-3.5 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition rounded-full flex flex-row space-x-1 items-center"
+								type="button"
+								on:click={resetPasswordHandler}
+							>
+								비밀번호 초기화
+							</button>
 							<button
 								class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full flex flex-row space-x-1 items-center"
 								type="submit"

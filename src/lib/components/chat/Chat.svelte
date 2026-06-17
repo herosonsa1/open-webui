@@ -1237,7 +1237,9 @@
 		// Ensure at least one model is selected
 		if (selectedModels.length === 0 || (selectedModels.length === 1 && selectedModels[0] === '')) {
 			if (availableModels.length > 0) {
-				if (defaultModels && defaultModels.length > 0) {
+				if (availableModels.includes('gemma2:31b')) {
+					selectedModels = ['gemma2:31b'];
+				} else if (defaultModels && defaultModels.length > 0) {
 					selectedModels = defaultModels.filter((modelId) => availableModels.includes(modelId));
 				}
 

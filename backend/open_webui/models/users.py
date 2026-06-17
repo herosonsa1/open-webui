@@ -73,6 +73,18 @@ class User(Base):  # identity & profile
     oauth = Column(JSON, nullable=True)
     scim = Column(JSON, nullable=True)
 
+    # 추가 관리 필드들
+    position_name = Column(String, nullable=True)  # 직급
+    org_nm = Column(String, nullable=True)         # 부서명
+    org_cd = Column(String, nullable=True)         # 부서 코드
+    parent_org_nm = Column(String, nullable=True)  # 상위부서명
+    phone_number = Column(String, nullable=True)   # 연락처
+    ip_address = Column(String, nullable=True)     # 고정 IP주소
+    join_date = Column(String, nullable=True)      # 입사일
+    resign_date = Column(String, nullable=True)    # 퇴사일
+    sync_lock_yn = Column(String(1), default='N')  # 동기화 잠금 여부 (Y/N)
+    password_updated_at = Column(BigInteger, nullable=True)  # 비밀번호 변경일 Unix timestamp
+
     # Timestamps (epoch seconds)
     last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
@@ -109,6 +121,17 @@ class UserModel(BaseModel):
 
     oauth: dict | None = None
     scim: dict | None = None
+
+    position_name: str | None = None
+    org_nm: str | None = None
+    org_cd: str | None = None
+    parent_org_nm: str | None = None
+    phone_number: str | None = None
+    ip_address: str | None = None
+    join_date: str | None = None
+    resign_date: str | None = None
+    sync_lock_yn: str | None = 'N'
+    password_updated_at: int | None = None
 
     last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
@@ -170,6 +193,14 @@ class UpdateProfileForm(BaseModel):
     bio: str | None = None
     gender: str | None = None
     date_of_birth: datetime.date | None = None
+    position_name: str | None = None
+    org_nm: str | None = None
+    org_cd: str | None = None
+    parent_org_nm: str | None = None
+    phone_number: str | None = None
+    ip_address: str | None = None
+    join_date: str | None = None
+    resign_date: str | None = None
 
     @field_validator('profile_image_url')
     @classmethod
@@ -258,6 +289,16 @@ class UserUpdateForm(BaseModel):
     email: str | None = None
     profile_image_url: str | None = None
     password: str | None = None
+    position_name: str | None = None
+    org_nm: str | None = None
+    org_cd: str | None = None
+    parent_org_nm: str | None = None
+    phone_number: str | None = None
+    ip_address: str | None = None
+    join_date: str | None = None
+    resign_date: str | None = None
+    sync_lock_yn: str | None = 'N'
+    password_updated_at: int | None = None
 
     @field_validator('profile_image_url', mode='before')
     @classmethod
@@ -277,6 +318,16 @@ class UsersTable:
         role: str = 'pending',
         username: str | None = None,
         oauth: dict | None = None,
+        position_name: str | None = None,
+        org_nm: str | None = None,
+        org_cd: str | None = None,
+        parent_org_nm: str | None = None,
+        phone_number: str | None = None,
+        ip_address: str | None = None,
+        join_date: str | None = None,
+        resign_date: str | None = None,
+        password_updated_at: int | None = None,
+        sync_lock_yn: str | None = 'N',
         db: AsyncSession | None = None,
     ) -> UserModel | None:
         async with get_async_db_context(db) as session:
@@ -292,6 +343,16 @@ class UsersTable:
                     'updated_at': int(time.time()),
                     'username': username,
                     'oauth': oauth,
+                    'position_name': position_name,
+                    'org_nm': org_nm,
+                    'org_cd': org_cd,
+                    'parent_org_nm': parent_org_nm,
+                    'phone_number': phone_number,
+                    'ip_address': ip_address,
+                    'join_date': join_date,
+                    'resign_date': resign_date,
+                    'password_updated_at': password_updated_at,
+                    'sync_lock_yn': sync_lock_yn,
                 }
             )
             result = User(**user.model_dump())

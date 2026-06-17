@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 import uuid
+import time
 from typing import Optional
 
 from open_webui.internal.db import Base, JSONField, get_async_db_context
 from open_webui.models.users import User, UserModel, UserProfileImageResponse, Users
 from open_webui.utils.validate import validate_profile_image_url
 from pydantic import BaseModel, field_validator
-from sqlalchemy import Boolean, Column, String, Text, delete, select, update
+from sqlalchemy import Boolean, Column, String, Text, delete, select, update, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 log = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class Auth(Base):  # credential ↔ user linkage
     email = Column(String)  # login address, kept in sync with User.email
     password = Column(Text)  # argon2 / bcrypt hash
     active = Column(Boolean)  # account soft-disable toggle
+    password_updated_at = Column(Integer, nullable=True)  # 비밀번호 변경일 Unix timestamp
 
 
 class AuthModel(BaseModel):
@@ -34,6 +36,7 @@ class AuthModel(BaseModel):
     email: str
     password: str
     active: bool = True
+    password_updated_at: Optional[int] = None
 
 
 class Token(BaseModel):
@@ -115,6 +118,7 @@ class AuthsTable:
                 email=email,
                 password=password,
                 active=True,
+                password_updated_at=int(time.time()),
             )
             session.add(credential)
 
@@ -211,8 +215,22 @@ class AuthsTable:
             if auth_row is None:
                 return False
             auth_row.password = new_password
+            auth_row.password_updated_at = int(time.time())
             await session.commit()
+            await Users.update_user_by_id(user_id, {'password_updated_at': auth_row.password_updated_at}, db=session)
             return True
+
+    async def get_password_updated_at_by_id(
+        self,
+        user_id: str,
+        db: AsyncSession | None = None,
+    ) -> int | None:
+        """사용자의 비밀번호 변경일을 Unix timestamp로 가져옵니다."""
+        async with get_async_db_context(db) as session:
+            auth_row = await session.get(Auth, user_id)
+            if auth_row is None:
+                return None
+            return auth_row.password_updated_at
 
     async def delete_auth_by_id(
         self,

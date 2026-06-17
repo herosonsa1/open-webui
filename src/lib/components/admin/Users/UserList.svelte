@@ -12,7 +12,7 @@
 
 	import { toast } from 'svelte-sonner';
 
-	import { updateUserRole, getUsers, deleteUserById } from '$lib/apis/users';
+	import { updateUserRole, getUsers, deleteUserById, syncUsers, updateUserSyncLock } from '$lib/apis/users';
 
 	import Pagination from '$lib/components/common/Pagination.svelte';
 	import ChatBubbles from '$lib/components/icons/ChatBubbles.svelte';
@@ -56,6 +56,42 @@
 	let showUserChatsModal = false;
 	let showEditUserModal = false;
 	let showUserPreviewModal = false;
+
+	let isSyncing = false;
+	$: isAdmin = $user?.role === 'admin';
+
+	const syncUsersHandler = async () => {
+		if (isSyncing) return;
+		isSyncing = true;
+		
+		const syncPromise = syncUsers(localStorage.token);
+		
+		toast.promise(syncPromise, {
+			loading: '운영 데이터베이스로부터 사용자 정보를 동기화 중...',
+			success: (res) => {
+				isSyncing = false;
+				getUserList();
+				return `동기화 완료: 추가 ${res.appended}건, 수정 ${res.updated}건`;
+			},
+			error: (err) => {
+				isSyncing = false;
+				return `동기화 실패: ${err}`;
+			}
+		});
+	};
+
+	const toggleSyncLock = async (userItem) => {
+		const newSyncLock = userItem.sync_lock_yn === 'Y' ? false : true;
+		try {
+			const res = await updateUserSyncLock(localStorage.token, userItem.id, newSyncLock);
+			if (res) {
+				toast.success(`${userItem.name}님의 동기화 잠금이 ${newSyncLock ? '설정' : '해제'}되었습니다.`);
+				getUserList();
+			}
+		} catch (error) {
+			toast.error(`동기화 잠금 상태 변경 실패: ${error}`);
+		}
+	};
 
 	const deleteUserHandler = async (id) => {
 		const res = await deleteUserById(localStorage.token, id).catch((error) => {
@@ -215,6 +251,26 @@
 					/>
 				</div>
 
+				{#if $user?.role === 'admin'}
+				<div class="mr-1">
+					<Tooltip content="실시간 사용자 동기화">
+						<button
+							class="p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1 disabled:opacity-55"
+							on:click={syncUsersHandler}
+							disabled={isSyncing}
+						>
+							{#if isSyncing}
+								<Spinner className="size-3.5" />
+							{:else}
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+								</svg>
+							{/if}
+						</button>
+					</Tooltip>
+				</div>
+				{/if}
+
 				<div>
 					<Tooltip content={$i18n.t('Add User')}>
 						<button
@@ -280,6 +336,48 @@
 								</span>
 							{/if}
 						</div>
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						직급
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						부서명
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						연락처
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						고정 IP주소
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						입사일
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						비밀번호 변경일
+					</th>
+					<th
+						scope="col"
+						class="px-2.5 py-2 cursor-pointer select-none"
+					>
+						동기화 잠금
 					</th>
 					<th
 						scope="col"
@@ -399,6 +497,23 @@
 									</div>
 								{/if}
 							</div>
+						</td>
+						<td class=" px-3 py-1 truncate"> {user.position_name || '-'} </td>
+						<td class=" px-3 py-1 truncate"> {user.org_nm || '-'} </td>
+						<td class=" px-3 py-1 truncate"> {user.phone_number || '-'} </td>
+						<td class=" px-3 py-1 truncate"> {user.ip_address || '-'} </td>
+						<td class=" px-3 py-1 truncate"> {user.join_date || '-'} </td>
+						<td class=" px-3 py-1 truncate">
+							{user.password_updated_at && user.password_updated_at > 0 ? dayjs(user.password_updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '초기화 필요'}
+						</td>
+						<td class=" px-3 py-1 text-center">
+							<input
+								type="checkbox"
+								checked={user.sync_lock_yn === 'Y'}
+								on:change={() => toggleSyncLock(user)}
+								class="rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-500 size-3.5"
+								disabled={!isAdmin}
+							/>
 						</td>
 						<td class=" px-3 py-1 max-w-48 truncate"> {user.email} </td>
 

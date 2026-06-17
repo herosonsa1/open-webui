@@ -9,7 +9,7 @@ from open_webui.config import (
     BYPASS_ADMIN_ACCESS_CONTROL,
     DEFAULT_ARENA_MODEL,
 )
-from open_webui.env import BYPASS_MODEL_ACCESS_CONTROL, GLOBAL_LOG_LEVEL
+from open_webui.env import BYPASS_MODEL_ACCESS_CONTROL, GLOBAL_LOG_LEVEL, ENV, DOCKER
 from open_webui.functions import get_function_models
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.functions import Functions
@@ -51,6 +51,67 @@ async def fetch_openai_models(request: Request, user: UserModel = None):
     return openai_response['data']
 
 
+DUMMY_MODELS = [
+    {
+        'id': 'gemma2:9b',
+        'name': 'Gemma 2 9B (Dummy)',
+        'object': 'model',
+        'created': 0,
+        'owned_by': 'ollama',
+        'ollama': {
+            'model': 'gemma2:9b',
+            'name': 'Gemma 2 9B',
+        },
+        'loaded': True,
+        'connection_type': 'local',
+        'tags': [],
+        'info': {
+            'meta': {
+                'description': 'Google의 가볍고 효율적인 9B 크기의 오픈 모델 Gemma 2 입니다. (로컬 테스트용 더미)'
+            }
+        }
+    },
+    {
+        'id': 'gemma2:27b',
+        'name': 'Gemma 2 27B (Dummy)',
+        'object': 'model',
+        'created': 0,
+        'owned_by': 'ollama',
+        'ollama': {
+            'model': 'gemma2:27b',
+            'name': 'Gemma 2 27B',
+        },
+        'loaded': True,
+        'connection_type': 'local',
+        'tags': [],
+        'info': {
+            'meta': {
+                'description': 'Google의 우수한 성능을 자랑하는 27B 크기의 오픈 모델 Gemma 2 입니다. (로컬 테스트용 더미)'
+            }
+        }
+    },
+    {
+        'id': 'gemma2:31b',
+        'name': 'Gemma 2 31B (Dummy)',
+        'object': 'model',
+        'created': 0,
+        'owned_by': 'ollama',
+        'ollama': {
+            'model': 'gemma2:31b',
+            'name': 'Gemma 2 31B',
+        },
+        'loaded': True,
+        'connection_type': 'local',
+        'tags': [],
+        'info': {
+            'meta': {
+                'description': 'vLLM 테스트를 위한 31B 크기의 더미 모델입니다. (로컬 테스트용 더미)'
+            }
+        }
+    }
+]
+
+
 async def get_all_base_models(request: Request, user: UserModel = None):
     openai_task = (
         fetch_openai_models(request, user)
@@ -66,7 +127,12 @@ async def get_all_base_models(request: Request, user: UserModel = None):
 
     openai_models, ollama_models, function_models = await asyncio.gather(openai_task, ollama_task, function_task)
 
-    return function_models + openai_models + ollama_models
+    base_models = function_models + openai_models + ollama_models
+
+    if ENV != 'prod' and not DOCKER:
+        base_models = base_models + DUMMY_MODELS
+
+    return base_models
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):
@@ -164,6 +230,38 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     model['filter_ids'] = filter_ids
                 else:
                     models.remove(model)
+            else:
+                # base_model_id가 None이고 매칭되는 base_model이 없으면 독립형 커스텀 모델로 추가
+                if custom_model.is_active:
+                    model = {
+                        'id': f'{custom_model.id}',
+                        'name': custom_model.name,
+                        'object': 'model',
+                        'created': custom_model.created_at,
+                        'owned_by': 'openai',
+                        'preset': True,
+                    }
+
+                    info = custom_model.model_dump()
+                    if 'params' in info:
+                        del info['params']
+
+                    model['info'] = info
+
+                    action_ids = []
+                    filter_ids = []
+
+                    if custom_model.meta:
+                        meta = custom_model.meta.model_dump()
+                        if 'actionIds' in meta:
+                            action_ids.extend(meta['actionIds'])
+                        if 'filterIds' in meta:
+                            filter_ids.extend(meta['filterIds'])
+
+                    model['action_ids'] = action_ids
+                    model['filter_ids'] = filter_ids
+
+                    models.append(model)
 
         elif custom_model.is_active:
             if custom_model.id in existing_ids:

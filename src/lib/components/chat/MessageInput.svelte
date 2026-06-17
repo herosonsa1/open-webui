@@ -144,6 +144,12 @@
 
 	export let pendingOAuthTools = [];
 
+	$: visibleModels = $models.filter((m) => m?.preset && m.id !== 'arena' && !m?.arena);
+
+	const selectModel = (modelId: string) => {
+		selectedModels = [modelId];
+	};
+
 	let showTerminalMenu = false;
 
 	export let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
@@ -1267,6 +1273,27 @@
 							class="hidden"
 							on:click={() => createMessagePair(prompt)}
 						/>
+						<!-- 모델 선택 토글 버튼 -->
+						{#if visibleModels && visibleModels.length > 0}
+							<div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hidden px-2 py-1 mb-1 max-w-full">
+								{#each visibleModels as model (model.id)}
+									{@const isSelected = selectedModels.includes(model.id)}
+									<button
+										type="button"
+										class="text-xs px-3 py-1.5 rounded-full transition-all font-medium shrink-0 border flex items-center gap-1.5
+											{isSelected
+												? 'bg-sky-500 text-white border-sky-500 dark:bg-sky-600 dark:border-sky-600 shadow-sm'
+												: 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-800/80 hover:bg-gray-50 dark:hover:bg-gray-850'}"
+										on:click={() => selectModel(model.id)}
+									>
+										{#if model.meta?.knowledge && model.meta.knowledge.length > 0}
+											<span class="w-1.5 h-1.5 rounded-full {isSelected ? 'bg-sky-200 animate-pulse' : 'bg-sky-500 dark:bg-sky-400'}"></span>
+										{/if}
+										{model.name}
+									</button>
+								{/each}
+							</div>
+						{/if}
 
 						<!-- Task list display -->
 						{#if isActive && chatTasks.length > 0}

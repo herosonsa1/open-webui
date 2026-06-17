@@ -488,6 +488,15 @@ type UserUpdateForm = {
 	email: string;
 	name: string;
 	password: string;
+	position_name?: string;
+	org_nm?: string;
+	org_cd?: string;
+	parent_org_nm?: string;
+	phone_number?: string;
+	ip_address?: string;
+	join_date?: string;
+	resign_date?: string;
+	sync_lock_yn?: string;
 };
 
 export const updateUserById = async (token: string, userId: string, user: UserUpdateForm) => {
@@ -504,7 +513,16 @@ export const updateUserById = async (token: string, userId: string, user: UserUp
 			role: user.role,
 			email: user.email,
 			name: user.name,
-			password: user.password !== '' ? user.password : undefined
+			password: user.password !== '' ? user.password : undefined,
+			position_name: user.position_name,
+			org_nm: user.org_nm,
+			org_cd: user.org_cd,
+			parent_org_nm: user.parent_org_nm,
+			phone_number: user.phone_number,
+			ip_address: user.ip_address,
+			join_date: user.join_date,
+			resign_date: user.resign_date,
+			sync_lock_yn: user.sync_lock_yn
 		})
 	})
 		.then(async (res) => {
@@ -568,6 +586,88 @@ export const getUserPreview = async (token: string, userId: string) => {
 		.catch((err) => {
 			console.error(err);
 			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const resetUserPasswordById = async (token: string, userId: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/reset-password`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const syncUsers = async (token: string) => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/sync`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		}
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail || err.message || err;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const updateUserSyncLock = async (token: string, userId: string, syncLock: boolean) => {
+	let error = null;
+	const res = await fetch(`${WEBUI_API_BASE_URL}/users/${userId}/sync-lock`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify({
+			syncLock: syncLock
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail || err.message || err;
 			return null;
 		});
 

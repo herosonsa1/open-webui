@@ -1,6 +1,50 @@
 @reference "./tailwind.css";
 
 @font-face {
+	font-family: 'NanumSquareNeo';
+	src: url('/assets/fonts/NANUMSQUARENEO-BRG.TTF') format('truetype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'NanumSquareNeo';
+	src: url('/assets/fonts/NANUMSQUARENEO-ALT.TTF') format('truetype');
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'NanumSquareNeo';
+	src: url('/assets/fonts/NANUMSQUARENEO-CBD.TTF') format('truetype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'NanumSquareNeo';
+	src: url('/assets/fonts/NANUMSQUARENEO-DEB.TTF') format('truetype');
+	font-weight: 800;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'NanumSquareNeo';
+	src: url('/assets/fonts/NANUMSQUARENEO-EHV.TTF') format('truetype');
+	font-weight: 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+html, body {
+	font-family: 'NanumSquareNeo', 'Archivo', 'Vazirmatn', sans-serif !important;
+}
+
+@font-face {
 	font-family: 'Inter';
 	src: url('/assets/fonts/Inter-Variable.ttf');
 	font-display: swap;
@@ -37,8 +81,8 @@
 
 html {
 	word-break: break-word;
-	/* font-size scales the entire document via the same UI control */
-	font-size: calc(1rem * var(--app-text-scale, 1));
+	/* 기본 폰트 크기를 기존 대비 120%(1.2rem)로 상향 설정 */
+	font-size: calc(1.2rem * var(--app-text-scale, 1)) !important;
 }
 
 #sidebar-chat-item {
@@ -119,7 +163,7 @@ textarea::placeholder {
 }
 
 .font-primary {
-	font-family: 'Archivo', 'Vazirmatn', sans-serif;
+	font-family: 'NanumSquareNeo', 'Archivo', 'Vazirmatn', sans-serif !important;
 }
 
 .drag-region {
@@ -838,4 +882,21 @@ body {
 
 #note-content-container .ProseMirror {
 	padding-bottom: 2rem; /* space for the bottom toolbar */
+}
+
+/* 라이트 테마에서 입력 폼 항목명(레이블)과 안내문구의 가독성을 높이기 위한 짙은 남색 스타일링 */
+html:not(.dark) label,
+html:not(.dark) .text-xs.text-gray-500,
+html:not(.dark) .text-xs.text-gray-400,
+html:not(.dark) .text-sm.text-gray-500,
+html:not(.dark) .text-sm.text-gray-400,
+html:not(.dark) .text-gray-500,
+html:not(.dark) .text-gray-400 {
+	color: #1e3a8a !important; /* 짙은 남색 */
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+	color: #1e3a8a !important;
+	opacity: 0.65 !important;
 }

@@ -34,7 +34,7 @@ export const activeUserIds: Writable<null | string[]> = writable(null);
 export const activeChatIds: Writable<Set<string>> = writable(new Set());
 export const USAGE_POOL: Writable<null | string[]> = writable(null);
 
-export const theme = writable('system');
+export const theme = writable('light');
 
 export const shortCodesToEmojis = writable(
 	Object.entries(emojiShortCodes).reduce((acc, [key, value]) => {
@@ -235,6 +235,9 @@ type Settings = {
 	recentEmojis?: string[];
 	pinnedMenuItems?: string[];
 
+	buttonGroups?: ButtonGroup[];
+	activeButtonGroupId?: string | null;
+
 	system?: string;
 	seed?: number;
 	temperature?: string;
@@ -246,6 +249,15 @@ type Settings = {
 	num_keep?: string;
 	options?: ModelOptions;
 };
+
+export interface ButtonGroup {
+	id: string;
+	name: string;
+	knowledgeIds: string[];
+	systemPrompt?: string;
+	skillIds?: string[];
+	toolIds?: string[];
+}
 
 type ModelOptions = {
 	stop?: boolean;

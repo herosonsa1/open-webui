@@ -593,6 +593,7 @@ async def update_user_by_id(
 
             hashed = get_password_hash(form_data.password)
             await Auths.update_user_password_by_id(user_id, hashed, db=db)
+            update_data['password_updated_at'] = int(time.time())
 
         # Build update dict from only the provided fields
         update_data = {}
@@ -605,6 +606,26 @@ async def update_user_by_id(
             await Auths.update_email_by_id(user_id, form_data.email.lower(), db=db)
         if form_data.profile_image_url is not None:
             update_data['profile_image_url'] = form_data.profile_image_url
+
+        # 추가 관리 필드 업데이트
+        if form_data.position_name is not None:
+            update_data['position_name'] = form_data.position_name
+        if form_data.org_nm is not None:
+            update_data['org_nm'] = form_data.org_nm
+        if form_data.org_cd is not None:
+            update_data['org_cd'] = form_data.org_cd
+        if form_data.parent_org_nm is not None:
+            update_data['parent_org_nm'] = form_data.parent_org_nm
+        if form_data.phone_number is not None:
+            update_data['phone_number'] = form_data.phone_number
+        if form_data.ip_address is not None:
+            update_data['ip_address'] = form_data.ip_address
+        if form_data.join_date is not None:
+            update_data['join_date'] = form_data.join_date
+        if form_data.resign_date is not None:
+            update_data['resign_date'] = form_data.resign_date
+        if form_data.sync_lock_yn is not None:
+            update_data['sync_lock_yn'] = form_data.sync_lock_yn
 
         if update_data:
             updated_user = await Users.update_user_by_id(
@@ -631,6 +652,43 @@ async def update_user_by_id(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail=ERROR_MESSAGES.USER_NOT_FOUND,
     )
+
+
+############################
+# ResetUserPassword
+############################
+
+
+@router.post('/{user_id}/reset-password', response_model=UserModel | None)
+async def reset_user_password(
+    user_id: str,
+    session_user: UserModel = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    user = await Users.get_user_by_id(user_id, db=db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+    # 비밀번호를 사번(user_id)으로 초기화
+    hashed = get_password_hash(user_id)
+    
+    # auth 테이블 비밀번호 갱신 및 두 테이블의 password_updated_at을 0으로 설정하여 즉시 비밀번호 변경 유도
+    from sqlalchemy import text
+    await db.execute(
+        text("UPDATE auth SET password = :password, password_updated_at = 0 WHERE id = :id"),
+        {'password': hashed, 'id': user_id}
+    )
+    await db.execute(
+        text("UPDATE user SET password_updated_at = 0 WHERE id = :id"),
+        {'id': user_id}
+    )
+    await db.commit()
+
+    updated_user = await Users.get_user_by_id(user_id, db=db)
+    return updated_user
 
 
 ############################
@@ -759,3 +817,41 @@ async def get_user_preview(
             'total': len(all_tools),
         },
     }
+
+
+class UserSyncLockForm(BaseModel):
+    syncLock: bool
+
+
+@router.post('/sync')
+async def force_sync_users(
+    user=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    from open_webui.utils.user_sync import sync_users_from_prod_db
+    try:
+        appended, updated = await sync_users_from_prod_db(db)
+        return {"status": "success", "appended": appended, "updated": updated}
+    except Exception as e:
+        log.exception("Manual user sync failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"사용자 정보 동기화 중 오류 발생: {str(e)}"
+        )
+
+
+@router.post('/{user_id}/sync-lock')
+async def toggle_user_sync_lock(
+    user_id: str,
+    form_data: UserSyncLockForm,
+    user=Depends(get_admin_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    status_str = 'Y' if form_data.syncLock else 'N'
+    updated = await Users.update_user_by_id(user_id, {'sync_lock_yn': status_str}, db=db)
+    if updated:
+        return {"status": "success", "sync_lock_yn": status_str}
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=ERROR_MESSAGES.USER_NOT_FOUND,
+    )

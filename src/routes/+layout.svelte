@@ -52,7 +52,7 @@
 	import 'tippy.js/dist/tippy.css';
 
 	import { executeToolServer, getBackendConfig, getModels, getVersion } from '$lib/apis';
-	import { getSessionUser, updateUserTimezone, userSignOut } from '$lib/apis/auths';
+	import { getSessionUser, updateUserTimezone, userSignOut, updateUserPassword } from '$lib/apis/auths';
 	import { getAllTags, getChatList } from '$lib/apis/chats';
 	import { chatCompletion } from '$lib/apis/openai';
 	import {
@@ -498,7 +498,7 @@
 
 			if ($isLastActiveTab) {
 				if ($settings?.notificationEnabled ?? false) {
-					new Notification(`${data.title} • Open WebUI`, {
+					new Notification(`${data.title} • ${$WEBUI_NAME}`, {
 						body: timeStr,
 						icon: `${WEBUI_BASE_URL}/static/favicon.png`
 					});
@@ -629,7 +629,7 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
-							new Notification(`${displayTitle} • Open WebUI`, {
+							new Notification(`${displayTitle} • ${$WEBUI_NAME}`, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
@@ -737,7 +737,7 @@
 
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${title} • Open WebUI`, {
+						new Notification(`${title} • ${$WEBUI_NAME}`, {
 							body: data?.content,
 							icon: `${WEBUI_API_BASE_URL}/users/${data?.user?.id}/profile/image`
 						});
@@ -1158,6 +1158,71 @@
 	onDestroy(() => {
 		bc.close();
 	});
+
+	let showForcePasswordChange = false;
+	let showPasswordWarningModal = false;
+	let allowChangeCancel = false;
+
+	let currentPassword = '';
+	let newPassword = '';
+	let newPasswordConfirm = '';
+	let passwordChangeLoading = false;
+
+	$: if ($user) {
+		if ($user.password_expired) {
+			showForcePasswordChange = true;
+			allowChangeCancel = false;
+		} else if ($user.password_warning) {
+			const warningShown = sessionStorage.getItem('password_warning_shown');
+			if (!warningShown) {
+				showPasswordWarningModal = true;
+			}
+		}
+	}
+
+	const handlePasswordChange = async () => {
+		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+		if (!passwordRegex.test(newPassword)) {
+			toast.error(
+				'비밀번호는 대문자, 소문자, 숫자, 특수문자를 각각 1개 이상 포함하여 8자 이상이어야 합니다.'
+			);
+			newPassword = '';
+			newPasswordConfirm = '';
+			return;
+		}
+
+		if (newPassword !== newPasswordConfirm) {
+			toast.error(
+				$i18n.t("The passwords you entered don't quite match. Please double-check and try again.")
+			);
+			newPassword = '';
+			newPasswordConfirm = '';
+			return;
+		}
+
+		passwordChangeLoading = true;
+		try {
+			const res = await updateUserPassword(localStorage.token, currentPassword, newPassword);
+			if (res) {
+				toast.success('비밀번호가 성공적으로 변경되었습니다.');
+				// 사용자 세션 다시 가져오기
+				const sessionUser = await getSessionUser(localStorage.token).catch(() => null);
+				if (sessionUser) {
+					await user.set(sessionUser);
+				}
+				// 폼 초기화 및 모달 닫기
+				currentPassword = '';
+				newPassword = '';
+				newPasswordConfirm = '';
+				showForcePasswordChange = false;
+				sessionStorage.setItem('password_warning_shown', 'true');
+			}
+		} catch (error) {
+			toast.error(`${error}`);
+		} finally {
+			passwordChangeLoading = false;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -1211,3 +1276,115 @@
 	position="top-right"
 	closeButton
 />
+
+{#if showPasswordWarningModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+		<div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl transition-all scale-100">
+			<div class="flex items-center space-x-3 mb-4 text-amber-500">
+				<svg class="size-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+				</svg>
+				<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">비밀번호 만기 예정 안내</h3>
+			</div>
+			<p class="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+				비밀번호 만기일이 1주일 이내로 남았습니다. 보안을 위해 지금 비밀번호를 변경하시겠습니까?
+			</p>
+			<div class="flex justify-end space-x-3">
+				<button 
+					type="button" 
+					class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+					on:click={() => {
+						showPasswordWarningModal = false;
+						sessionStorage.setItem('password_warning_shown', 'true');
+					}}
+				>
+					나중에 변경
+				</button>
+				<button 
+					type="button" 
+					class="px-4 py-2 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-xl shadow-xs"
+					on:click={() => {
+						showPasswordWarningModal = false;
+						showForcePasswordChange = true;
+						allowChangeCancel = true; 
+					}}
+				>
+					지금 변경
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showForcePasswordChange}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+		<div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl transition-all scale-100">
+			<div class="mb-4">
+				<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+					{allowChangeCancel ? '비밀번호 변경' : '비밀번호 변경 필요'}
+				</h3>
+				<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+					{allowChangeCancel ? '보안을 위해 비밀번호를 변경해주세요.' : '비밀번호 만기 기간(3개월)이 초과되어 계속 사용하려면 비밀번호를 변경해야 합니다.'}
+				</p>
+			</div>
+
+			<form on:submit|preventDefault={handlePasswordChange} class="space-y-4">
+				<div>
+					<label class="block text-xs font-medium text-gray-500 mb-1">현재 비밀번호</label>
+					<input 
+						type="password" 
+						bind:value={currentPassword} 
+						class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-black dark:focus:ring-white" 
+						required 
+					/>
+				</div>
+				<div>
+					<label class="block text-xs font-medium text-gray-500 mb-1">새 비밀번호</label>
+					<input 
+						type="password" 
+						bind:value={newPassword} 
+						class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-black dark:focus:ring-white" 
+						required 
+					/>
+					<div class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+						대문자, 소문자, 숫자, 특수문자 각 1개 이상 포함, 8자 이상
+					</div>
+				</div>
+				<div>
+					<label class="block text-xs font-medium text-gray-500 mb-1">새 비밀번호 확인</label>
+					<input 
+						type="password" 
+						bind:value={newPasswordConfirm} 
+						class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-black dark:focus:ring-white" 
+						required 
+					/>
+				</div>
+
+				<div class="flex justify-end space-x-3 pt-2">
+					{#if allowChangeCancel}
+						<button 
+							type="button" 
+							class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+							on:click={() => {
+								showForcePasswordChange = false;
+								currentPassword = '';
+								newPassword = '';
+								newPasswordConfirm = '';
+							}}
+						>
+							취소
+						</button>
+					{/if}
+					<button 
+						type="submit" 
+						disabled={passwordChangeLoading}
+						class="px-4 py-2 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-xl shadow-xs disabled:opacity-50"
+					>
+						{passwordChangeLoading ? '변경 중...' : '비밀번호 변경'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+

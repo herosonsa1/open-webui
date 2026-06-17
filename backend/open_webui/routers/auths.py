@@ -130,6 +130,8 @@ async def create_session_response(
 
     user_permissions = await get_permissions(user.id, request.app.state.config.USER_PERMISSIONS, db=db)
 
+    password_expired, password_warning = await check_password_status(user.id, db=db)
+
     return {
         'token': token,
         'token_type': 'Bearer',
@@ -140,17 +142,51 @@ async def create_session_response(
         'role': user.role,
         'profile_image_url': f'/api/v1/users/{user.id}/profile/image',
         'permissions': user_permissions,
+        'password_expired': password_expired,
+        'password_warning': password_warning,
+        'position_name': getattr(user, 'position_name', None),
+        'org_nm': getattr(user, 'org_nm', None),
+        'org_cd': getattr(user, 'org_cd', None),
+        'parent_org_nm': getattr(user, 'parent_org_nm', None),
+        'phone_number': getattr(user, 'phone_number', None),
+        'ip_address': getattr(user, 'ip_address', None),
+        'join_date': getattr(user, 'join_date', None),
+        'resign_date': getattr(user, 'resign_date', None),
+        'password_updated_at': getattr(user, 'password_updated_at', None),
     }
 
 
-############################
-# GetSessionUser
-############################
+async def check_password_status(user_id: str, db: AsyncSession) -> tuple[bool, bool]:
+    """비밀번호의 만기(90일) 및 만기 1주일 전 경고 여부를 판별합니다."""
+    password_updated_at = await Auths.get_password_updated_at_by_id(user_id, db=db)
+    if password_updated_at is None:
+        return False, False
+
+    now = int(time.time())
+    elapsed = now - password_updated_at
+
+    # 90일 = 90 * 24 * 3600 = 7,776,000 초
+    # 83일 = 83 * 24 * 3600 = 7,171,200 초
+    password_expired = elapsed >= 7776000
+    password_warning = elapsed >= 7171200
+
+    return password_expired, password_warning
 
 
 class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: int | None = None
     permissions: dict | None = None
+    password_expired: bool = False
+    password_warning: bool = False
+    position_name: str | None = None
+    org_nm: str | None = None
+    org_cd: str | None = None
+    parent_org_nm: str | None = None
+    phone_number: str | None = None
+    ip_address: str | None = None
+    join_date: str | None = None
+    resign_date: str | None = None
+    password_updated_at: int | None = None
 
 
 class SessionUserInfoResponse(SessionUserResponse, UserStatus):
@@ -203,6 +239,8 @@ async def get_session_user(
 
     user_permissions = await get_permissions(user.id, request.app.state.config.USER_PERMISSIONS, db=db)
 
+    password_expired, password_warning = await check_password_status(user.id, db=db)
+
     response_data = {
         'token': token,
         'token_type': 'Bearer',
@@ -219,6 +257,17 @@ async def get_session_user(
         'status_message': user.status_message,
         'status_expires_at': user.status_expires_at,
         'permissions': user_permissions,
+        'password_expired': password_expired,
+        'password_warning': password_warning,
+        'position_name': getattr(user, 'position_name', None),
+        'org_nm': getattr(user, 'org_nm', None),
+        'org_cd': getattr(user, 'org_cd', None),
+        'parent_org_nm': getattr(user, 'parent_org_nm', None),
+        'phone_number': getattr(user, 'phone_number', None),
+        'ip_address': getattr(user, 'ip_address', None),
+        'join_date': getattr(user, 'join_date', None),
+        'resign_date': getattr(user, 'resign_date', None),
+        'password_updated_at': getattr(user, 'password_updated_at', None),
     }
 
     return response_data

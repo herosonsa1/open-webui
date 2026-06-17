@@ -2564,6 +2564,12 @@ DEFAULT_PROMPT_SUGGESTIONS = ConfigVar(
     default_prompt_suggestions,
 )
 
+BUTTON_GROUPS = ConfigVar(
+    'BUTTON_GROUPS',
+    'ui.button_groups',
+    [],
+)
+
 MODEL_ORDER_LIST = ConfigVar(
     'MODEL_ORDER_LIST',
     'ui.model_order_list',

@@ -646,6 +646,10 @@ def validate_email_format(email: str) -> bool:
     if email.endswith('@localhost'):
         return True
 
+    # 숫자로만 이루어진 사번 형식 허용
+    if email.isdigit():
+        return True
+
     return bool(re.match(r'[^@]+@[^@]+\.[^@]+', email))
 
 

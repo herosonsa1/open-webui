@@ -33,6 +33,7 @@
 	export let history = {};
 	export let selectedModels;
 	export let atSelectedModel;
+	export let activeButtonGroupId: string | null = null;
 
 	let messages = [];
 
@@ -485,6 +486,22 @@
 			{#key chatId}
 				<section class="w-full" aria-labelledby="chat-conversation">
 					<h2 class="sr-only" id="chat-conversation">{$i18n.t('Chat Conversation')}</h2>
+					
+					<!-- 활성화된 버튼 그룹 정보 배너 추가 -->
+					{#if activeButtonGroupId}
+						{@const activeGroup = $config?.button_groups?.find(g => g.id === activeButtonGroupId)}
+						{#if activeGroup}
+							<div class="flex justify-center my-3 px-4">
+								<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 dark:bg-sky-500/5 border border-sky-500/20 text-[11px] text-sky-600 dark:text-sky-400 font-medium backdrop-blur-md">
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+										<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.25v2.75a.75.75 0 001.5 0v-3.5A.75.75 0 0010 9H9z" clip-rule="evenodd" />
+									</svg>
+									<span>현재 '{activeGroup.name}' 버튼 그룹 설정(RAG 및 프롬프트)이 이 대화방에 적용 중입니다.</span>
+								</div>
+							</div>
+						{/if}
+					{/if}
+
 					{#if messages.at(0)?.parentId !== null}
 						<Loader
 							on:visible={(e) => {

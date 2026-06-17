@@ -198,9 +198,12 @@ class ModelsTable:
                     log.error('Skipping model %r during get_all_models due to error: %s', model.id, exc)
             return models
 
-    async def get_models(self, db: AsyncSession | None = None) -> list[ModelUserResponse]:
+    async def get_models(self, is_local: bool = False, db: AsyncSession | None = None) -> list[ModelUserResponse]:
         async with get_async_db_context(db) as db:
-            result = await db.execute(select(Model).filter(Model.base_model_id != None))
+            stmt = select(Model)
+            if not is_local:
+                stmt = stmt.filter(Model.base_model_id != None)
+            result = await db.execute(stmt)
             all_models = result.scalars().all()
 
             user_ids = list(set(model.user_id for model in all_models))
@@ -241,9 +244,9 @@ class ModelsTable:
             ]
 
     async def get_models_by_user_id(
-        self, user_id: str, permission: str = 'write', db: AsyncSession | None = None
+        self, user_id: str, permission: str = 'write', is_local: bool = False, db: AsyncSession | None = None
     ) -> list[ModelUserResponse]:
-        models = await self.get_models(db=db)
+        models = await self.get_models(is_local=is_local, db=db)
         user_groups = await Groups.get_groups_by_member_id(user_id, db=db)
         user_group_ids = {group.id for group in user_groups}
 
@@ -278,11 +281,13 @@ class ModelsTable:
         filter: dict = {},
         skip: int = 0,
         limit: int = 30,
+        is_local: bool = False,
         db: AsyncSession | None = None,
     ) -> ModelListResponse:
         async with get_async_db_context(db) as db:
             stmt = select(Model, User).outerjoin(User, User.id == Model.user_id)
-            stmt = stmt.filter(Model.base_model_id != None)
+            if not is_local:
+                stmt = stmt.filter(Model.base_model_id != None)
 
             if filter:
                 query_key = filter.get('query')
