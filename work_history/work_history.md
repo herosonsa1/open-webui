@@ -87,8 +87,17 @@
   - [UserList.svelte](file:///c:/myWork/workspace/scratch/open-webui/src/lib/components/admin/Users/UserList.svelte) 파일에서 이메일 필드(`email`)의 헤더 텍스트를 `{$i18n.t('Email')}`에서 `'사번'`으로 직접 변경하였습니다.
   - 초기 화면 로드 시의 기본 정렬 기준인 `orderBy` 변수를 `'created_at'`에서 `'email'`로 수정하여, 테이블 데이터가 최초 로드될 때 사번을 기준으로 오름차순 정렬되도록 조정하였습니다.
 
-## 13. 파비콘(Favicon) 이미지 변경 및 적용
-- **작업 내용**: 시스템 기본 파비콘(Favicon) 이미지를 사용자가 제공한 신규 브랜드 로고 이미지로 교체 적용하였습니다.
+## 13. 브랜드 로고(OI) 이미지 전면 교체 및 favicon.ico 404 에러 대응
+- **작업 내용**: 시스템 기본 파비콘 외에 스플래시 화면 등 브랜드 아이덴티티(OI)로 작동하는 모든 로고 이미지를 교체하고, 브라우저의 기본 favicon.ico 요청에 따른 404 에러를 방지하도록 조치하였습니다.
 - **상세**:
-  - 기존 [favicon.png](file:///c:/myWork/workspace/scratch/open-webui/static/favicon.png) 파일을 업로드된 신규 "HERO" 로고 이미지로 덮어쓰기 완료하였습니다.
-  - 변경된 파비콘 리소스가 배포용 정적 디렉토리에 정상 반영되도록 프론트엔드 전체 리빌드(`npm run build`) 과정을 완수하였습니다.
+  - **로고 및 스플래시 이미지 교체**:
+    - [favicon.png](file:///c:/myWork/workspace/scratch/open-webui/static/favicon.png)
+    - [favicon-dark.png](file:///c:/myWork/workspace/scratch/open-webui/static/static/favicon-dark.png)
+    - [splash.png](file:///c:/myWork/workspace/scratch/open-webui/static/static/splash.png)
+    - [splash-dark.png](file:///c:/myWork/workspace/scratch/open-webui/static/static/splash-dark.png)
+    위 경로의 이미지 파일들을 모두 업로드된 신규 "HERO" 로고 이미지로 덮어쓰기 완료하였습니다.
+  - **favicon.ico 404 오류 해결**:
+    - 브라우저의 기본 `/favicon.ico` 조회 시 404 에러가 발생하지 않도록 FastAPI 메인 애플리케이션인 [main.py](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/main.py) 파일에 `@app.get('/favicon.ico')` 라우트를 추가하여 신규 로고 이미지(`favicon.png`)를 직접 반환하도록 연동하였습니다.
+    - 추가로 `static/favicon.ico` 및 `static/static/favicon.ico` 경로로도 신규 파비콘 파일을 배치하여 직접적인 정적 참조 환경에 대응하였습니다.
+  - **정적 리소스 리빌드**: 모든 신규 리소스가 완벽히 적용될 수 있도록 프론트엔드 빌드(`npm run build`) 과정을 성공적으로 완수하였습니다.
+

@@ -2977,6 +2977,10 @@ async def check_db_health():
     await async_db_ping()
     return {'status': True}
 
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(f'{STATIC_DIR}/favicon.png')
+
 
 # --- static assets & files ---
 # Serve build-time static assets (CSS, JS, images, favicon, etc.)
