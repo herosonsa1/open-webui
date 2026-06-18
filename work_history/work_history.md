@@ -75,4 +75,8 @@
     - 서버 구동 전 자동으로 최신 웹 리소스를 빌드하는 `call npm run build` 프로세스를 탑재하였습니다.
   - **무효 데이터 제거 및 기초 데이터 이식**: 엑셀/tsv 기초 데이터 임포트 시 누락된 헤더 정보(`EMP_ID`, `EMP_NAME` 등)가 DB의 `user`, `auth` 테이블에 삽입되어 주요 관리자(Primary Admin) 보호 필터에 걸려 삭제가 불가(403 Forbidden)했던 현상을 sqlite3 직접 조회를 통해 안전하게 DB에서 영구 삭제 처리하였습니다. 아울러 제공된 이미지 내 신규 사원 32명의 정보를 SQL 규격(연락처 하이픈 자동 포맷 적용)에 맞춰 [users_import.sql](file:///c:/myWork/workspace/scratch/open-webui/backend/data/users_import.sql) 파일 마지막에 성공적으로 연동 추가하였습니다.
 
-
+## 11. SQL 임포트 신규 사용자 DB 수동 동기화 반영
+- **작업 내용**: `users_import.sql`에 신규 추가한 32명의 사원 데이터를 SQLite 로컬 DB(`webui.db`)에 최종 영구 반영하였습니다.
+- **상세**:
+  - `backend/register_users.py` 스크립트를 실행하여 `users_import.sql`에 새로 작성된 신규 사원 데이터를 파싱하고, `user` 및 `auth` 테이블에 인서트 및 업데이트 처리를 완료하였습니다.
+  - 신규 사용자들의 로그인 비밀번호는 각 사번(`EMP_ID`)의 해시값으로 인코딩하여 설정되었으며, 이를 통해 관리자 패널의 사용자 개요 화면 및 사용자 상세 정보에 정상 표출되도록 완전히 조치하였습니다.
