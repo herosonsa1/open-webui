@@ -118,3 +118,12 @@
   - **메모리 및 캐시 필터링 우회**: [models.py (Utils)](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/utils/models.py)의 `check_model_access` 및 `get_filtered_models`를 수정하여, 모델 소유자(Owner)가 `system`이거나 소유자 역할이 `admin`인 모델의 경우 필터에서 예외 처리를 하여 일반 사용자의 최종 조회 모델 목록에 항상 반환되도록 하였습니다. 이 과정에서 모델 소유자의 역할을 일괄(Batch) 조회하여 성능 저하를 차단하였습니다.
   - **작업 검증 완료**: 일반 사용자 계정으로 로그인하여 `/api/models` 및 `/api/v1/models/list` API를 호출하고 관리자가 등록해둔 모델이 목록에 정상 수신되는지 시뮬레이션 테스트를 완료하였습니다.
 
+## 16. 오프라인 폐쇄망 배포용 Docker 이미지 빌드 패키징 및 스크립트 구축
+- **작업 내용**: 인터넷망 연결이 차단된 오프라인 리눅스 운영서버 배포를 위해, 모든 외부 CDN 자산(웹 폰트 등)을 로컬 정적 경로로 처리하고 핵심 AI 모델 가중치(임베딩, Whisper 등)를 빌드 시점에 이미지 내에 영구 캐싱하여 배포 아카이브(`.tar` 파일)를 추출할 수 있는 빌드 프로세스 및 자동화 스크립트를 구축하였습니다.
+- **상세**:
+  - **오프라인 빌드 설계**: `USE_SLIM=false` 및 `USE_CUDA=false` 빌드 인자를 사용하여 Dockerfile 빌드 타임에 `SentenceTransformer` 임베딩 가중치, `WhisperModel` 음성인식 가중치, `tiktoken` 인코딩 사전, `nltk` 토크나이저 데이터를 내부 `/app/backend/data/cache`에 미리 저장하여 이미지 내장형으로 제작되도록 하였습니다.
+  - **외부 CDN 및 텔레메트리 차단**: NanumSquareNeo 폰트 등 정적 리소스를 모두 `static/assets/fonts/` 하위로 로컬화했으며, 외부 트래킹 요청을 방지하기 위해 텔레메트리 비활성화 환경변수(`SCARF_NO_ANALYTICS=true`, `DO_NOT_TRACK=true`, `ANONYMIZED_TELEMETRY=false`)가 내장된 Docker 실행 구조를 확립했습니다.
+  - **통합 빌드 스크립트 배포**:
+    - **윈도우용**: [build_offline.bat](file:///c:/myWork/workspace/scratch/open-webui/build_offline.bat) 및 [build_offline_image.ps1](file:///c:/myWork/workspace/scratch/open-webui/dist/build_offline_image.ps1)을 작성했습니다. 특히 `build_offline.bat`는 한글 윈도우 인코딩(CP949) 환경에서의 충돌을 예방하고자 모든 주석과 메시지를 영문으로 설계하여 무결성을 높였습니다.
+    - **리눅스용**: [build_offline.sh](file:///c:/myWork/workspace/scratch/open-webui/build_offline.sh) 및 [build_offline_image.sh](file:///c:/myWork/workspace/scratch/open-webui/dist/build_offline_image.sh)를 작성하여, 리눅스 빌드 서버에서 `./build_offline.sh`를 구동하면 `dist/open-webui-offline-latest.tar`로 배포본이 자동 출력되도록 제작했습니다.
+  - **배포 가이드 수립**: [README.md](file:///c:/myWork/workspace/scratch/open-webui/dist/README.md) 안내서를 배포용 `dist` 폴더 내에 작성하여, 현재 개발 PC 내 Docker 데몬 부재로 인한 빌드 불가 현상을 진단하고 리눅스에서의 이미지 빌드 및 오프라인 적재 실행 방법을 완벽하게 정리했습니다.
