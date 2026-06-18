@@ -109,3 +109,12 @@
 - **상세**:
   - [app.css](file:///c:/myWork/workspace/scratch/open-webui/src/app.css) 파일에서 `html` 기본 폰트 크기를 기존 `1.2rem`(120%)에서 `1.1rem`(110%)으로 줄였습니다.
   - 대화 내용이 렌더링되는 `.markdown-prose` 클래스에 `@apply text-[15px]`를 추가하여, 글자 크기가 더욱 깔끔하고 보기 편하게 수정하였습니다.
+
+## 15. 관리자 생성 모델의 일반 사용자 공유 노출 구현
+- **작업 내용**: 관리자 계정에서 추가한 RAG 프리셋 커스텀 모델이 일반 사용자 계정으로 로그인했을 때도 동일하게 화면에 노출되고 작동하도록 백엔드 접근 제어 및 필터링 로직을 개선하였습니다.
+- **상세**:
+  - **데이터베이스 권한 필터 우회**: [access_grants.py](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/models/access_grants.py) 내 `has_permission_filter` 메서드 및 [models.py](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/models/models.py) 내 `get_models_by_user_id`를 수정하여, 리소스 타입이 `model`인 경우 소유자가 `system`이거나 생성자의 역할(Role)이 `admin`인 경우 SQL `OR` 조건 및 우회 로직을 적용하였습니다.
+  - **SQL 500 에러 해결**: `search_models` 내 `exists` 쿼리 수행 시 발생하는 auto-correlation(자기 상관)으로 인한 `Returned no FROM clauses` 500 에러를 방지하고자, `exists` 서브쿼리 생성 시 `.correlate(DocumentModel)`를 명시적으로 체이닝하였습니다.
+  - **메모리 및 캐시 필터링 우회**: [models.py (Utils)](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/utils/models.py)의 `check_model_access` 및 `get_filtered_models`를 수정하여, 모델 소유자(Owner)가 `system`이거나 소유자 역할이 `admin`인 모델의 경우 필터에서 예외 처리를 하여 일반 사용자의 최종 조회 모델 목록에 항상 반환되도록 하였습니다. 이 과정에서 모델 소유자의 역할을 일괄(Batch) 조회하여 성능 저하를 차단하였습니다.
+  - **작업 검증 완료**: 일반 사용자 계정으로 로그인하여 `/api/models` 및 `/api/v1/models/list` API를 호출하고 관리자가 등록해둔 모델이 목록에 정상 수신되는지 시뮬레이션 테스트를 완료하였습니다.
+

@@ -631,6 +631,35 @@ VECTOR_DB = os.getenv('VECTOR_DB', 'chroma')
 CHROMA_DATA_PATH = f'{DATA_DIR}/vector_db'
 
 if VECTOR_DB == 'chroma':
+    try:
+        import pydantic.v1.fields
+        original_set_default_and_type = pydantic.v1.fields.ModelField._set_default_and_type
+        
+        def patched_set_default_and_type(self):
+            try:
+                original_set_default_and_type(self)
+            except Exception as e:
+                if "unable to infer type" in str(e):
+                    name = self.name.lower()
+                    if any(x in name for x in ["port", "limit", "size", "count", "nofile", "bytes"]):
+                        t = int
+                    elif any(x in name for x in ["enabled", "verify", "persistent", "allow", "reset"]):
+                        t = bool
+                    elif "headers" in name:
+                        t = dict
+                    elif "origins" in name or "keys" in name:
+                        t = list
+                    else:
+                        t = str
+                    self.type_ = t
+                    self.outer_type_ = t
+                    original_set_default_and_type(self)
+                else:
+                    raise
+        pydantic.v1.fields.ModelField._set_default_and_type = patched_set_default_and_type
+    except Exception:
+        pass
+
     import chromadb
 
     CHROMA_TENANT = os.getenv('CHROMA_TENANT', chromadb.DEFAULT_TENANT)

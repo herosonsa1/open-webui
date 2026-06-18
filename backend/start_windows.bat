@@ -1,7 +1,8 @@
-:: This method is not recommended, and we recommend you use the `start.sh` file with WSL instead.
 @echo off
 chcp 65001 >nul
 SETLOCAL ENABLEDELAYEDEXPANSION
+SET "VECTOR_DB=chroma"
+
 
 :: Get the directory of the current script
 SET "SCRIPT_DIR=%~dp0"
@@ -22,9 +23,6 @@ SET "KEY_FILE=.webui_secret_key"
 IF NOT "%WEBUI_SECRET_KEY_FILE%" == "" (
     SET "KEY_FILE=%WEBUI_SECRET_KEY_FILE%"
 )
-
-IF "%VECTOR_DB%"=="" SET "VECTOR_DB=s3vector"
-IF "%RAG_EMBEDDING_ENGINE%"=="" SET "RAG_EMBEDDING_ENGINE=openai"
 
 IF "%PORT%"=="" SET PORT=8080
 IF "%HOST%"=="" SET HOST=0.0.0.0
@@ -83,4 +81,3 @@ timeout /t 2 /nobreak >nul
 :: 실시간 로그 모니터링 (PowerShell의 Get-Content -Wait 활용)
 echo 실시간 로그 출력을 시작합니다 (로그 모니터링 종료: Ctrl+C)...
 powershell -Command "Get-Content '%SCRIPT_DIR%open_webui_server.log' -Wait -Tail 20"
-:: For ssl user uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --ssl-keyfile "key.pem" --ssl-certfile "cert.pem" --ws auto

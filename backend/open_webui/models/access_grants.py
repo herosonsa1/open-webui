@@ -761,6 +761,23 @@ class AccessGrantsTable:
         if user_id:
             owner_or_grant.append(DocumentModel.user_id == user_id)
 
+        # 리소스 타입이 모델(model)인 경우, 소유자가 시스템(system)이거나 유저 역할이 관리자(admin)인 경우 필터 우회
+        if resource_type == 'model':
+            owner_or_grant.append(DocumentModel.user_id == 'system')
+            from open_webui.models.users import User
+            admin_user_exists = (
+                select(User.id)
+                .where(
+                    and_(
+                        User.id == DocumentModel.user_id,
+                        User.role == 'admin'
+                    )
+                )
+                .correlate(DocumentModel)
+                .exists()
+            )
+            owner_or_grant.append(admin_user_exists)
+
         query = query.filter(or_(*owner_or_grant))
         return query
 

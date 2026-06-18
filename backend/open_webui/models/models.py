@@ -252,7 +252,8 @@ class ModelsTable:
 
         result = []
         for model in models:
-            if model.user_id == user_id:
+            # 소유자가 본인이거나, 시스템(system)이거나, 혹은 소유자의 역할이 관리자(admin)인 경우 항상 접근 허용
+            if model.user_id == user_id or model.user_id == 'system' or (model.user and model.user.role == 'admin'):
                 result.append(model)
             elif await AccessGrants.has_access(
                 user_id=user_id,

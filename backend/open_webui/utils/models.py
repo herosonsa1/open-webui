@@ -15,7 +15,7 @@ from open_webui.models.access_grants import AccessGrants
 from open_webui.models.functions import Functions
 from open_webui.models.groups import Groups
 from open_webui.models.models import Models
-from open_webui.models.users import UserModel
+from open_webui.models.users import UserModel, Users
 from open_webui.routers import ollama, openai
 from open_webui.socket.utils import RedisDict
 from open_webui.utils.access_control import has_access, has_base_model_access
@@ -488,8 +488,15 @@ async def check_model_access(user, model, db=None):
         model_info = await Models.get_model_by_id(model.get('id'), db=db)
         if not model_info:
             raise Exception('Model not found')
-        elif not (
+        
+        # 모델 소유자(Owner)가 admin인지 확인
+        owner = await Users.get_user_by_id(model_info.user_id) if model_info.user_id else None
+        is_owner_admin = owner.role == 'admin' if owner else False
+
+        if not (
             user.id == model_info.user_id
+            or model_info.user_id == 'system'
+            or is_owner_admin
             or await AccessGrants.has_access(
                 user_id=user.id,
                 resource_type='model',
@@ -530,6 +537,11 @@ async def get_filtered_models(models, user, db=None):
             db=db,
         )
 
+        # 모델 소유자들의 역할을 일괄 조회해서 admin인지 파악
+        owner_ids = {info.get('user_id') for info in model_infos.values() if info.get('user_id')}
+        owners = await Users.get_users_by_user_ids(list(owner_ids), db=db) if owner_ids else []
+        admin_owner_ids = {owner.id for owner in owners if owner.role == 'admin'}
+
         filtered_models = []
         for model in models:
             if model.get('arena'):
@@ -546,9 +558,12 @@ async def get_filtered_models(models, user, db=None):
 
             model_info = model_infos.get(model['id'])
             if model_info:
+                owner_id = model_info.get('user_id')
                 if (
                     (user.role == 'admin' and BYPASS_ADMIN_ACCESS_CONTROL)
-                    or user.id == model_info.get('user_id')
+                    or user.id == owner_id
+                    or owner_id == 'system'
+                    or owner_id in admin_owner_ids
                     or model['id'] in accessible_model_ids
                 ):
                     filtered_models.append(model)
