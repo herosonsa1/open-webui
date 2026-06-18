@@ -46,7 +46,7 @@
 
 	let query = '';
 	let searchDebounceTimer: ReturnType<typeof setTimeout>;
-	let orderBy = 'created_at'; // default sort key
+	let orderBy = 'email'; // default sort key
 	let direction = 'asc'; // default sort order
 
 	let selectedUser = null;
@@ -403,7 +403,7 @@
 						on:click={() => setSortKey('email')}
 					>
 						<div class="flex gap-1.5 items-center">
-							{$i18n.t('Email')}
+							사번
 
 							{#if orderBy === 'email'}
 								<span class="font-normal"
