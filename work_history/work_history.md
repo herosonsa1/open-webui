@@ -87,3 +87,8 @@
   - [UserList.svelte](file:///c:/myWork/workspace/scratch/open-webui/src/lib/components/admin/Users/UserList.svelte) 파일에서 이메일 필드(`email`)의 헤더 텍스트를 `{$i18n.t('Email')}`에서 `'사번'`으로 직접 변경하였습니다.
   - 초기 화면 로드 시의 기본 정렬 기준인 `orderBy` 변수를 `'created_at'`에서 `'email'`로 수정하여, 테이블 데이터가 최초 로드될 때 사번을 기준으로 오름차순 정렬되도록 조정하였습니다.
 
+## 13. 파비콘(Favicon) 이미지 변경 및 적용
+- **작업 내용**: 시스템 기본 파비콘(Favicon) 이미지를 사용자가 제공한 신규 브랜드 로고 이미지로 교체 적용하였습니다.
+- **상세**:
+  - 기존 [favicon.png](file:///c:/myWork/workspace/scratch/open-webui/static/favicon.png) 파일을 업로드된 신규 "HERO" 로고 이미지로 덮어쓰기 완료하였습니다.
+  - 변경된 파비콘 리소스가 배포용 정적 디렉토리에 정상 반영되도록 프론트엔드 전체 리빌드(`npm run build`) 과정을 완수하였습니다.
