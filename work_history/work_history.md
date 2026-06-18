@@ -104,4 +104,8 @@
     - SvelteKit 빌드 디렉토리(`build/`) 내의 리소스들을 백엔드 FastAPI가 물리적으로 서빙하는 실시간 static 디렉토리인 [backend/open_webui/static](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/static) 하위에 수동으로 전수 복사 덮어쓰기 하였습니다.
     - 변경된 정적 자산 및 백엔드 라우팅 설정을 최종 기동하기 위해 `start_windows.bat` 스크립트를 수행하여 캐시 클린 및 포트 충돌 없이 백엔드 서버를 안정적으로 재부팅 완료하였습니다.
 
-
+## 14. 채팅 화면 및 대화 텍스트 폰트 크기 최적화
+- **작업 내용**: 채팅 화면 본문 및 사용자 입력 영역의 폰트 크기를 조밀하게 축소하여 가독성을 개선하였습니다.
+- **상세**:
+  - [app.css](file:///c:/myWork/workspace/scratch/open-webui/src/app.css) 파일에서 `html` 기본 폰트 크기를 기존 `1.2rem`(120%)에서 `1.1rem`(110%)으로 줄였습니다.
+  - 대화 내용이 렌더링되는 `.markdown-prose` 클래스에 `@apply text-[15px]`를 추가하여, 글자 크기가 더욱 깔끔하고 보기 편하게 수정하였습니다.
