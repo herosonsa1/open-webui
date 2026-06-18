@@ -307,7 +307,7 @@
 
 	<div class="scrollbar-hidden relative whitespace-nowrap overflow-x-auto max-w-full">
 		<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full">
-			<thead class="text-[9px] text-gray-800 uppercase bg-transparent dark:text-gray-200">
+			<thead class="text-[11px] text-gray-800 uppercase bg-transparent dark:text-gray-200">
 				<tr class=" border-b-[1.5px] border-gray-50 dark:border-gray-850/30">
 					<th
 						scope="col"
@@ -473,7 +473,7 @@
 			</thead>
 			<tbody class="">
 				{#each users as user, userIdx (user.id)}
-					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-[9px]">
+					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-[11px]">
 						<td class="px-1 py-0.5 min-w-[5.5rem] w-24">
 							<button
 								class=" translate-y-0.5"
@@ -486,7 +486,7 @@
 								<Badge
 									type={user.role === 'admin' ? 'info' : user.role === 'user' ? 'success' : 'muted'}
 									content={$i18n.t(user.role)}
-									className="text-[9px]"
+									className="text-[11px]"
 								/>
 							</button>
 						</td>
