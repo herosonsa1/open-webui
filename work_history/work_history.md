@@ -96,8 +96,12 @@
     - [splash.png](file:///c:/myWork/workspace/scratch/open-webui/static/static/splash.png)
     - [splash-dark.png](file:///c:/myWork/workspace/scratch/open-webui/static/static/splash-dark.png)
     위 경로의 이미지 파일들을 모두 업로드된 신규 "HERO" 로고 이미지로 덮어쓰기 완료하였습니다.
-  - **favicon.ico 404 오류 해결**:
-    - 브라우저의 기본 `/favicon.ico` 조회 시 404 에러가 발생하지 않도록 FastAPI 메인 애플리케이션인 [main.py](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/main.py) 파일에 `@app.get('/favicon.ico')` 라우트를 추가하여 신규 로고 이미지(`favicon.png`)를 직접 반환하도록 연동하였습니다.
-    - 추가로 `static/favicon.ico` 및 `static/static/favicon.ico` 경로로도 신규 파비콘 파일을 배치하여 직접적인 정적 참조 환경에 대응하였습니다.
-  - **정적 리소스 리빌드**: 모든 신규 리소스가 완벽히 적용될 수 있도록 프론트엔드 빌드(`npm run build`) 과정을 성공적으로 완수하였습니다.
+  - **진짜 다중 레이어 ICO 규격 변환**:
+    - 파이썬 Pillow 라이브러리를 통해 기존 PNG 포맷 로고 이미지를 진짜 `.ico` 규격(16x16, 32x32, 48x48 등 다중 해상도 지원) 파일로 인코딩하여 `static/favicon.ico`, `static/static/favicon.ico`, `backend/open_webui/static/favicon.ico`에 각각 이식하였습니다.
+  - **SVG 파비콘 참조 차단**:
+    - 모던 브라우저가 SVG를 PNG/ICO보다 우선 렌더링하여 예전 로고가 남아보이던 현상을 방지하고자, [app.html](file:///c:/myWork/workspace/scratch/open-webui/src/app.html) 헤더 탭에서 `favicon.svg`를 연결하는 `<link>` 태그 선언부 자체를 영구 제거하였습니다.
+  - **백엔드 정적 리소스 동기화 및 강제 적용**:
+    - SvelteKit 빌드 디렉토리(`build/`) 내의 리소스들을 백엔드 FastAPI가 물리적으로 서빙하는 실시간 static 디렉토리인 [backend/open_webui/static](file:///c:/myWork/workspace/scratch/open-webui/backend/open_webui/static) 하위에 수동으로 전수 복사 덮어쓰기 하였습니다.
+    - 변경된 정적 자산 및 백엔드 라우팅 설정을 최종 기동하기 위해 `start_windows.bat` 스크립트를 수행하여 캐시 클린 및 포트 충돌 없이 백엔드 서버를 안정적으로 재부팅 완료하였습니다.
+
 
