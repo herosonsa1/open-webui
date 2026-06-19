@@ -7,6 +7,7 @@ uploads
 _test
 !/data
 /data/*
+!/data/users_import.sql
 !/data/litellm
 /data/litellm/*
 !data/litellm/config.yaml

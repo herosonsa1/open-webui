@@ -7,18 +7,18 @@ cd "$(dirname "$0")/.."
 
 echo "=================================================="
 echo "오프라인 폐쇄망 배포용 Docker 이미지 빌드를 시작합니다."
-echo "빌드 설정: USE_CUDA=false, USE_OLLAMA=false, USE_SLIM=false"
+echo "빌드 설정: USE_CUDA=false, USE_OLLAMA=false, USE_SLIM=true"
 echo "=================================================="
 
 # 1. dist 디렉토리 존재 확인
 mkdir -p dist
 
 # 2. Docker 이미지 빌드 (가중치 캐싱을 위해 빌드 환경은 인터넷 연결 필수)
-echo "[1/2] Docker 이미지를 빌드 중입니다... (모델 다운로드로 인해 대략 10~20분 소요 가능)"
+echo "[1/2] Docker 이미지를 빌드 중입니다... (USE_SLIM=true: AI 가중치 제외)"
 docker build \
   --build-arg="USE_CUDA=false" \
   --build-arg="USE_OLLAMA=false" \
-  --build-arg="USE_SLIM=false" \
+  --build-arg="USE_SLIM=true" \
   -t open-webui:offline-latest .
 
 # 3. Docker 이미지를 tar 파일로 추출 및 저장

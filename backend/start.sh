@@ -59,6 +59,12 @@ if [[ "${USE_CUDA_DOCKER,,}" == "true" ]]; then
   export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}:/usr/local/lib/python3.11/site-packages/torch/lib:/usr/local/lib/python3.11/site-packages/nvidia/cudnn/lib"
 fi
 
+# ── Register imported users if script and SQL file exist ──────────────────────
+if [[ -f "register_users.py" && -f "data/users_import.sql" ]]; then
+  echo "Registering/updating imported users..."
+  python3 register_users.py || echo "User registration failed, continuing..."
+fi
+
 # ── HuggingFace Space deployment ─────────────────────────────────────────────
 
 if [[ -n "${SPACE_ID:-}" ]]; then

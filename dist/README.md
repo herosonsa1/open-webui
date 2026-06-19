@@ -7,9 +7,9 @@
 2. [build_offline_image.ps1](file:///c:/myWork/workspace/scratch/open-webui/dist/build_offline_image.ps1) : Windows 환경(Docker Desktop 설치됨)에서 이미지를 빌드하고 tar 아카이브로 추출하는 PowerShell 스크립트입니다.
 
 ## 중요한 참고사항
-- **빌드 환경의 인터넷 연결 필수**: 빌드 타임에 RAG 임베딩 가중치(`sentence-transformers/all-MiniLM-L6-v2`), 보조 가중치(`TaylorAI/bge-micro-v2`), 음성 인식 가중치(`Whisper base`), `tiktoken` 사전, `nltk` 데이터를 자동으로 인터넷에서 다운로드하여 이미지 내부에 캐싱합니다 (`USE_SLIM=false` 설정). 따라서, **이 이미지를 빌드하는 머신(Windows 또는 Linux 빌드 장비)은 인터넷에 정상적으로 연결되어 있어야 합니다.**
-- **호스트 환경 진단 결과**: 현재 이 Windows 개발 환경에는 Docker 데몬(Docker Desktop 등)이 설치되어 있지 않아 로컬 빌드가 불가능합니다.
-  따라서 본 빌드 패키지 소스를 빌드 가능한 운영 서버(리눅스)로 가져가 `dist/build_offline_image.sh`를 실행하거나, 이 PC에 Docker Desktop을 설치한 뒤 `dist/build_offline_image.ps1`을 실행하여 이미지를 추출해야 합니다.
+- **빌드 환경의 가중치 다운로드 제외**: 빌드 옵션(`USE_SLIM=true`) 적용을 통해 RAG 임베딩 가중치(`sentence-transformers/all-MiniLM-L6-v2`), 보조 가중치(`TaylorAI/bge-micro-v2`), 음성 인식 가중치(`Whisper base`), `tiktoken` 사전, `nltk` 데이터를 자동으로 이미지 내부에 다운로드하여 캐싱하는 과정이 제외되었습니다. 이로 인해 빌드된 Docker 이미지의 용량이 크게 줄어듭니다. 단, 폐쇄망 배포 후 사용 시 해당 AI 모델을 로드하는 기능은 외부 API 연동이나 추가 설정이 필요할 수 있습니다.
+- **호스트 환경 진단 결과**: 현재 이 Windows 개발 환경에는 Docker 데몬(Docker Desktop 등)이 설치되어 있지 않아 로컬 빌드가 불가능합니다. (이후 Docker Desktop이 실행되고 있으면 기동 가능합니다.)
+  따라서 본 빌드 패키지 소스를 빌드 가능한 운영 서버(리눅스)로 가져가 `dist/build_offline_image.sh`를 실행하거나, 이 PC에 Docker Desktop을 실행한 뒤 `dist/build_offline_image.ps1`을 실행하여 이미지를 추출해야 합니다.
 
 ## 리눅스 서버 빌드 방법 (인터넷 가능 서버 기준)
 1. 이 프로젝트 소스 코드 전체를 리눅스 빌드 서버로 복사합니다.

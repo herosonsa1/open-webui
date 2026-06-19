@@ -127,3 +127,15 @@
     - **윈도우용**: [build_offline.bat](file:///c:/myWork/workspace/scratch/open-webui/build_offline.bat) 및 [build_offline_image.ps1](file:///c:/myWork/workspace/scratch/open-webui/dist/build_offline_image.ps1)을 작성했습니다. 특히 `build_offline.bat`는 한글 윈도우 인코딩(CP949) 환경에서의 충돌을 예방하고자 모든 주석과 메시지를 영문으로 설계하여 무결성을 높였습니다.
     - **리눅스용**: [build_offline.sh](file:///c:/myWork/workspace/scratch/open-webui/build_offline.sh) 및 [build_offline_image.sh](file:///c:/myWork/workspace/scratch/open-webui/dist/build_offline_image.sh)를 작성하여, 리눅스 빌드 서버에서 `./build_offline.sh`를 구동하면 `dist/open-webui-offline-latest.tar`로 배포본이 자동 출력되도록 제작했습니다.
   - **배포 가이드 수립**: [README.md](file:///c:/myWork/workspace/scratch/open-webui/dist/README.md) 안내서를 배포용 `dist` 폴더 내에 작성하여, 현재 개발 PC 내 Docker 데몬 부재로 인한 빌드 불가 현상을 진단하고 리눅스에서의 이미지 빌드 및 오프라인 적재 실행 방법을 완벽하게 정리했습니다.
+
+## 17. Docker 배포 시 로컬 사용자 정보 누락 문제 조치
+- **작업 내용**: 로컬에서 임포트한 사용자 데이터가 Docker 빌드 및 배포본 생성 시 이미지 내부에 포함되지 않는 현상을 해결하였습니다.
+- **상세**:
+  - 루트 `.dockerignore` 및 `backend/.dockerignore` 파일을 수정하여, 기존에 일괄 차단(ignore)되던 `backend/data` 폴더 자산 중 사용자 등록 SQL 파일(`users_import.sql`)을 빌드 제외 대상에서 예외 처리 (`!users_import.sql` 또는 `!/data/users_import.sql`)하였습니다.
+  - 컨테이너 기동 시 실행되는 진입점 스크립트 [start.sh](file:///c:/myWork/workspace/scratch/open-webui/backend/start.sh)에 `register_users.py` 및 `users_import.sql`이 존재할 경우 자동으로 실행되도록 하는 구동 구문을 주입하였습니다. 이로써 최초 배포 혹은 볼륨 마운트 시에도 이미지 내에 포함된 신규 사용자가 SQLite DB(`webui.db`)에 누락 없이 인서트/업데이트(UPSERT)되도록 설계하였습니다.
+
+## 18. 워크스페이스 모델 선택 버튼 클릭 시 모델 미변경 버그 수정
+- **작업 내용**: 메인 채팅 화면의 커스텀 모델 버튼 그룹에서 특정 모델을 클릭했을 때 화면의 설명 및 타이틀은 변경되나, 실제 질의가 이전 모델로 전송되던 동기화 결함을 해결하였습니다.
+- **상세**:
+  - `Chat.svelte`에서 하위 컴포넌트인 `<Placeholder>` 및 `<MessageInput>`을 호출할 때 `selectedModels` 상태를 전달하는 부분이 단방향(`{selectedModels}`)으로 지정되어 있었기 때문에 하위 컴포넌트 내에서의 선택 변경 사항이 최상위 채팅 상태로 반영되지 못하고 유실되었던 점을 원인으로 파악하였습니다.
+  - [Chat.svelte](file:///c:/myWork/workspace/scratch/open-webui/src/lib/components/chat/Chat.svelte) 내 두 컴포넌트 호출부에 모두 양방향 바인딩(`bind:selectedModels={selectedModels}`)을 올바르게 추가함으로써, 사용자가 화면의 모델 캡슐 버튼(예: `Test2`)을 누를 시 실제 질문 전송 대상 모델 및 드롭다운 선택 모델이 정상적으로 동기화 변경되도록 최종 조치 완료하였습니다.

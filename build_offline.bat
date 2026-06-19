@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 
 echo ==================================================
 echo Starting Offline WebUI Docker Build
-echo Args: USE_CUDA=false, USE_OLLAMA=false, USE_SLIM=false
+echo Args: USE_CUDA=false, USE_OLLAMA=false, USE_SLIM=true
 echo ==================================================
 
 REM 1. Create dist directory if not exists
@@ -13,11 +13,11 @@ if not exist dist (
 )
 
 REM 2. Run docker build
-echo [1/2] Building Docker image... (This may take 10-20 mins for downloading weights)
+echo [1/2] Building Docker image... (USE_SLIM=true: AI weights excluded)
 docker build ^
   --build-arg="USE_CUDA=false" ^
   --build-arg="USE_OLLAMA=false" ^
-  --build-arg="USE_SLIM=false" ^
+  --build-arg="USE_SLIM=true" ^
   -t open-webui:offline-latest .
 
 if %errorlevel% neq 0 (
